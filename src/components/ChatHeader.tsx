@@ -71,7 +71,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                             title="Specialized Widgets"
                         >
                             <Layout className="w-5 h-5" />
-                            <span>Widgets</span>
+                            <span>Demos</span>
                             <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
                         </button>
 
