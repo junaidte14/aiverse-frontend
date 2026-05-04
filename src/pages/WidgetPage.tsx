@@ -10,7 +10,7 @@ export const WidgetPage: React.FC = () => {
         collection: searchParams.get('collection') || '',
         provider: searchParams.get('provider') || 'groq',
         model: searchParams.get('model') || 'llama-3.3-70b-versatile',
-        guestAllowed: searchParams.get('guestAllowed') !== 'false',
+        guestAllowed: searchParams.get('guestAllowed') || 'false',
         initialMessage: searchParams.get('initialMessage') || 'How can I help you today?',
         primaryColor: searchParams.get('primaryColor') || '#9333ea',
         position: (searchParams.get('position') as any) || 'bottom-right',

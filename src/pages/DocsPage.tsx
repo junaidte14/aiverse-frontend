@@ -11,7 +11,7 @@ export const DocsPage: React.FC = () => {
         collection: searchParams.get('collection') || '',
         provider: searchParams.get('provider') || 'groq',
         model: searchParams.get('model') || 'llama-3.3-70b-versatile',
-        guestAllowed: searchParams.get('guestAllowed') !== 'false',
+        guestAllowed: searchParams.get('guestAllowed') || 'false',
         initialMessage: searchParams.get('initialMessage') || 'How can I help you today?',
         primaryColor: searchParams.get('primaryColor') || '#9333ea',
         position: (searchParams.get('position') as any) || 'bottom-right',
@@ -38,7 +38,7 @@ export const DocsPage: React.FC = () => {
     <script>
         new AIVerseWidget({
             collection: '${config.collection || 'my-docs'}',
-            guestAllowed: ${config.guestAllowed},
+            guestAllowed: '${config.guestAllowed}',
             title: '${config.title}'
         });
     </script>`}</code>
@@ -53,7 +53,7 @@ export const DocsPage: React.FC = () => {
                                     { label: 'collection', desc: 'RAG collection name for document search', val: config.collection },
                                     { label: 'provider', desc: 'AI provider (groq, openai, anthropic)', val: config.provider },
                                     { label: 'model', desc: 'AI model name', val: config.model },
-                                    { label: 'guestAllowed', desc: 'Allow unauthenticated users', val: String(config.guestAllowed) },
+                                    { label: 'guestAllowed', desc: 'Allow unauthenticated users', val: config.guestAllowed },
                                 ].map((opt) => (
                                     <div key={opt.label} className="p-4 bg-gray-50 border-l-4 border-purple-500 rounded-r">
                                         <span className="font-bold text-gray-700">{opt.label}</span>: {opt.desc}

@@ -22,7 +22,7 @@ interface ChatWidgetProps {
     collection?: string;
     provider?: string;
     model?: string;
-    guestAllowed?: boolean;
+    guestAllowed?: string;
     initialMessage?: string;
     primaryColor?: string;
     position?: 'bottom-right' | 'bottom-left';
@@ -37,7 +37,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     collection = '',
     provider = 'groq',
     model = 'llama-3.3-70b-versatile',
-    guestAllowed = true,
+    guestAllowed = 'true',
     initialMessage = 'How can I help you today?',
     primaryColor = '#0A2540',
     position = 'bottom-right',

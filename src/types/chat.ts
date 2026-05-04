@@ -91,7 +91,7 @@ export interface ChatSettings {
     temperature: number;
     max_tokens: number;
     stream: boolean;
-    guest_allowed?: boolean;
+    guest_allowed?: string;
 }
 
 export interface User {
