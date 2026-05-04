@@ -48,7 +48,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         updateSettings
     } = useChat();
 
-    const [isOpen, setIsOpen] = useState(true);
+    const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
     const [isRegistering, setIsRegistering] = useState(false); // Toggle between Login/Register
     const [inputValue, setInputValue] = useState('');
