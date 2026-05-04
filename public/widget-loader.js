@@ -11,7 +11,7 @@ class AIVerseWidget {
             apiUrl: import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/',
             ...config,
         };
-        this.baseUrl = this.config.apiUrl;
+        this.baseUrl = 'https://aiverse-pi.vercel.app';
         this.init();
         this.setupListeners(); // Listen for resize events from React
     }

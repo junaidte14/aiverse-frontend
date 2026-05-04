@@ -32,7 +32,7 @@ class AIVerseWidget {
             ...config,
         };
 
-        this.baseUrl = import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/';
+        this.baseUrl = 'https://aiverse-pi.vercel.app';
         this.init();
     }
 
