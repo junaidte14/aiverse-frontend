@@ -27,17 +27,22 @@ interface ChatWidgetProps {
     primaryColor?: string;
     position?: 'bottom-right' | 'bottom-left';
     title?: string;
+    testUserDetails?: {
+        username: string;
+        password: string;
+    };
 }
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
     collection = '',
     provider = 'groq',
     model = 'llama-3.3-70b-versatile',
-    guestAllowed = false,
+    guestAllowed = true,
     initialMessage = 'How can I help you today?',
     primaryColor = '#0A2540',
     position = 'bottom-right',
     title = 'Support Assistant',
+    testUserDetails
 }) => {
     const {
         messages,
@@ -90,6 +95,25 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages, isLoading]);
+
+    useEffect(() => {
+        const performAutoLogin = async () => {
+            // Only auto-login if details are provided and user isn't logged in
+            if (testUserDetails && !isAuthenticated) {
+                try {
+                    // Option A: If you have a specific login method in your apiService
+                    await apiService.login(testUserDetails);
+
+                    // Trigger the existing success handler to fetch user data and update store
+                    //await handleAuthSuccess();
+                } catch (error) {
+                    console.error("Auto-login failed:", error);
+                }
+            }
+        };
+
+        performAutoLogin();
+    }, [testUserDetails]);
 
     const handleAuthSuccess = async () => {
         const user = await apiService.getCurrentUser();

@@ -15,6 +15,10 @@ export const WidgetPage: React.FC = () => {
         primaryColor: searchParams.get('primaryColor') || '#9333ea',
         position: (searchParams.get('position') as any) || 'bottom-right',
         title: searchParams.get('title') || 'AI Assistant',
+        testUserDetails: {
+            username: 'test_user',
+            password: 'Test@1234'
+        }
     });
 
     return (
