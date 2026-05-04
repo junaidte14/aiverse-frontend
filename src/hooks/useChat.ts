@@ -254,7 +254,7 @@ export const useChat = (): UseChatReturn => {
                 if (selectedCollection) {
                     await sendMessageRag(content.trim());
                 } else if (settings.stream) {
-                    await sendMessageStream(content.trim(), updatedHistory);
+                    await sendMessageNonStream(content.trim(), updatedHistory);
                 } else {
                     await sendMessageNonStream(content.trim(), updatedHistory);
                 }
