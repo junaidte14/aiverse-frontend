@@ -1,11 +1,11 @@
 // src/components/ChatHeader.tsx
-import { ChevronDown, LogOut, Shield, User as UserIcon } from 'lucide-react';
+import { ChevronDown, Home, Layout, LogOut, Shield, User as UserIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiService } from '../services/api';
 import { useStore } from '../store/useStore';
 
 interface ChatHeaderProps {
-    onClear: () => void;
     isLoading?: boolean;
     isAdmin?: boolean;
     onOpenAdmin?: () => void;
@@ -17,6 +17,8 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 }) => {
     const { user, logout } = useStore();
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
         checkConnection();
@@ -50,6 +52,48 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                     )}
 
                     <div className="relative">
+                        <button
+                            onClick={() => {
+                                navigate('/');
+                                setIsDropdownOpen(false);
+                            }}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium"
+                            title="Home"
+                        >
+                            <Home className="w-5 h-5" />
+                            <span>Home</span>
+                        </button>
+                    </div>
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-white/20 rounded-lg transition-colors text-sm font-medium"
+                            title="Specialized Widgets"
+                        >
+                            <Layout className="w-5 h-5" />
+                            <span>Widgets</span>
+                            <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {isDropdownOpen && (
+                            <div className="absolute top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 pointer-events-auto">
+                                <button
+                                    onClick={() => {
+                                        navigate('/widget?collection=versana');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Versana
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="relative">
+                        {/* Dropdown Container */}
                         <button
                             onClick={() => setShowUserMenu(!showUserMenu)}
                             className="flex items-center gap-2 px-3 py-1.5 rounded-full transition-all border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-primary-300 dark:hover:border-primary-700"

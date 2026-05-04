@@ -2,13 +2,13 @@ class AIVerseWidget {
     constructor(config = {}) {
         this.iframe = null;
         this.config = {
-            guestAllowed: true,
+            guestAllowed: false,
             provider: 'groq',
             model: 'llama-3.3-70b-versatile',
             primaryColor: '#9333ea',
             position: 'bottom-right',
             title: 'AI Assistant',
-            apiUrl: 'http://localhost:3000',
+            apiUrl: import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/',
             ...config,
         };
         this.baseUrl = this.config.apiUrl;

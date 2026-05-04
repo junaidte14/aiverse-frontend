@@ -20,7 +20,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     isAdmin = false,
     onOpenAdmin,
 }) => {
-    const { messages, isLoading, error, sendMessage, clearMessages } =
+    const { messages, isLoading, error, sendMessage } =
         useChat();
     const [showError, setShowError] = useState(true);
     const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
@@ -44,7 +44,6 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
             <div className="card w-full h-[100vh] flex flex-col overflow-hidden">
                 {/* Header */}
                 <ChatHeader
-                    onClear={clearMessages}
                     isLoading={isLoading}
                     isAdmin={isAdmin}
                     onOpenAdmin={onOpenAdmin}
