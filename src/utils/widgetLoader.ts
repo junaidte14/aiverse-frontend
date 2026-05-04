@@ -34,6 +34,7 @@ class AIVerseWidget {
 
         this.baseUrl = 'https://aiverse-pi.vercel.app';
         this.init();
+        this.setupListeners();
     }
 
     private init() {
@@ -42,6 +43,26 @@ class AIVerseWidget {
         } else {
             this.render();
         }
+    }
+
+    setupListeners() {
+        window.addEventListener('message', (event) => {
+            // Security check: ensure the message is the expected type
+            if (event.data.type === 'WIDGET_RESIZE' && this.iframe) {
+                // Apply the new dimensions sent from the React app
+                this.iframe.style.width = event.data.width;
+                this.iframe.style.height = event.data.height;
+
+                // Toggle pointer-events if needed
+                if (event.data.width === '80px') {
+                    // Small bubble state
+                    this.iframe.style.pointerEvents = 'auto';
+                } else {
+                    // Expanded chat state
+                    this.iframe.style.pointerEvents = 'auto';
+                }
+            }
+        });
     }
 
     private buildWidgetUrl(): string {
@@ -61,24 +82,22 @@ class AIVerseWidget {
     }
 
     private render() {
-        // Create iframe
         this.iframe = document.createElement('iframe');
         this.iframe.src = this.buildWidgetUrl();
-        this.iframe.style.position = 'fixed';
-        this.iframe.style.bottom = '10px';
-        this.iframe.style.right = this.config.position === 'bottom-left' ? 'auto' : '0';
-        this.iframe.style.left = this.config.position === 'bottom-left' ? '0' : 'auto';
-        this.iframe.style.pointerEvents = 'auto';
-        this.iframe.style.border = 'none';
-        this.iframe.style.zIndex = '999999';
-        this.iframe.style.pointerEvents = 'none';
 
-        // Make only the widget interactive
-        this.iframe.onload = () => {
-            if (this.iframe) {
-                this.iframe.style.pointerEvents = 'auto';
-            }
-        };
+        // Ensure the iframe has a transition for smooth resizing
+        Object.assign(this.iframe.style, {
+            position: 'fixed',
+            bottom: '20px',
+            right: this.config.position === 'bottom-left' ? 'auto' : '20px',
+            left: this.config.position === 'bottom-left' ? '20px' : 'auto',
+            width: '80px',
+            height: '80px',
+            border: 'none',
+            zIndex: '999999',
+            background: 'transparent',
+            transition: 'width 0.3s ease, height 0.3s ease' // Smooth transition
+        });
 
         document.body.appendChild(this.iframe);
     }
