@@ -7,6 +7,7 @@ import { Login } from './components/Login';
 import { RAGPanel } from './components/rag/RAGPanel';
 import { Register } from './components/Register';
 import { Sidebar } from './components/Sidebar';
+import { DocsPage } from './pages/DocsPage';
 import { WidgetPage } from './pages/WidgetPage'; // Import your WidgetPage
 import { apiService } from './services/api';
 import { useStore } from './store/useStore';
@@ -148,6 +149,8 @@ function App() {
       <Routes>
         {/* The dedicated route for the embeddable iframe widget */}
         <Route path="/widget" element={<WidgetPage />} />
+
+        <Route path="/demos" element={<DocsPage />} />
 
         {/* The main dashboard/login application */}
         <Route path="/" element={<MainDashboard />} />

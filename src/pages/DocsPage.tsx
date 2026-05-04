@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ChatHeader } from './ChatHeader';
-import { ChatWidget } from './widget/ChatWidget';
+import { ChatHeader } from '../components/ChatHeader';
+import { ChatWidget } from '../components/widget/ChatWidget';
 
-export const WidgetPage: React.FC = () => {
+export const DocsPage: React.FC = () => {
     const [searchParams] = useSearchParams();
 
     // Parse configuration once on mount
@@ -21,7 +21,7 @@ export const WidgetPage: React.FC = () => {
     return (
         <div className="overflow-hidden">
             <ChatHeader />
-            <div className="bg-transparent h-screen w-screen overflow-hidden pointer-events-none">
+            <div className="bg-transparent pointer-events-none">
                 {/* Demo Explanation Overlay */}
                 <div className="pointer-events-auto inset-0 overflow-y-auto p-8 pb-32">
                     <div className="max-w-3xl mx-auto space-y-8">

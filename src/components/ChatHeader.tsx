@@ -80,7 +80,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                             <div className="absolute top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 pointer-events-auto">
                                 <button
                                     onClick={() => {
-                                        navigate('/widget?collection=versana');
+                                        navigate('/demos?collection=versana');
                                         setIsDropdownOpen(false);
                                     }}
                                     className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
