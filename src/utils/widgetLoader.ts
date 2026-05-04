@@ -88,9 +88,9 @@ class AIVerseWidget {
         // Ensure the iframe has a transition for smooth resizing
         Object.assign(this.iframe.style, {
             position: 'fixed',
-            bottom: '20px',
-            right: this.config.position === 'bottom-left' ? 'auto' : '20px',
-            left: this.config.position === 'bottom-left' ? '20px' : 'auto',
+            bottom: '0',
+            right: this.config.position === 'bottom-left' ? 'auto' : '0',
+            left: this.config.position === 'bottom-left' ? '0' : 'auto',
             width: '80px',
             height: '80px',
             border: 'none',
