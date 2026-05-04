@@ -28,11 +28,11 @@ class AIVerseWidget {
             primaryColor: '#9333ea',
             position: 'bottom-right',
             title: 'AI Assistant',
-            apiUrl: 'http://localhost:8000',
+            apiUrl: import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/',
             ...config,
         };
 
-        this.baseUrl = this.config.apiUrl || 'http://localhost:8000';
+        this.baseUrl = import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/';
         this.init();
     }
 
