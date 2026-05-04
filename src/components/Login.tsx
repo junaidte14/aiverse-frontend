@@ -99,6 +99,7 @@ export const Login: React.FC<LoginProps> = ({ onLoginSuccess, onSwitchToRegister
                         >
                             Sign up
                         </button>
+                        <p>OR use the test credentials. username: <strong>test_user</strong> password: <strong>Test@1234</strong></p>
                     </p>
                 </div>
             </div>
