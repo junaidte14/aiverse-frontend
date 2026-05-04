@@ -68,8 +68,6 @@ class AIVerseWidget {
         this.iframe.style.bottom = '10px';
         this.iframe.style.right = this.config.position === 'bottom-left' ? 'auto' : '0';
         this.iframe.style.left = this.config.position === 'bottom-left' ? '0' : 'auto';
-        this.iframe.style.width = '350px';
-        this.iframe.style.height = '350px';
         this.iframe.style.pointerEvents = 'auto';
         this.iframe.style.border = 'none';
         this.iframe.style.zIndex = '999999';
