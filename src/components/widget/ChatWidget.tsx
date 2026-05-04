@@ -276,7 +276,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
                             {/* FIXED FOOTER (Input or KB Info) */}
                             <div className="p-4 bg-white border-t border-gray-100 shrink-0">
-                                {(!guestAllowed && !isAuthenticated) ? (
+                                {(!isAuthenticated) ? (
                                     <div className="text-center py-2 text-gray-400 text-[10px] font-bold uppercase tracking-widest">
                                         Please authenticate to continue
                                     </div>
