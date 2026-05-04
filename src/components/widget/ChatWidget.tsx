@@ -151,7 +151,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                                 )}
 
                                 {/* AUTHENTICATION SECTION (Injected into Scroll Stream) */}
-                                {!guestAllowed && !isAuthenticated && (
+                                {!isAuthenticated && (
                                     <div className="flex flex-col gap-4 mx-auto max-w-[320px] py-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
                                         <div className="flex items-center justify-center gap-2 text-gray-400 mb-2">
                                             <Lock size={14} />
