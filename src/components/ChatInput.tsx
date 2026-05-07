@@ -54,7 +54,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     };
 
     return (
-        <div className="p-4 bg-gradient-to-t from-background via-background to-transparent">
+        <div className="px-4 bg-gradient-to-t from-background via-background to-transparent">
             <div className="border rounded-xl bg-card shadow-lg focus-within:ring-2 focus-within:ring-primary/20 transition-all">
 
                 {/* Textarea Area */}
@@ -65,19 +65,19 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                     placeholder={placeholder}
                     onKeyDown={handleKeyDown}
                     disabled={disabled}
-                    rows={2}
-                    className="w-full p-4 bg-transparent resize-none outline-none border-none custom-scrollbar min-h-[10px] overflow-y-auto"
+                    rows={1}
+                    className="w-full p-4 bg-transparent resize-none outline-none border-none custom-scrollbar overflow-y-auto"
                 />
 
                 {/* Bottom Action Bar */}
-                <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30">
+                <div className="flex items-center justify-between px-4 py-1 border-t bg-muted/30">
 
                     <div className="flex items-center gap-1 relative">
                         {/* Collection Popover */}
                         {showRagPicker && (
                             <>
                                 <div className="fixed inset-0 z-10" onClick={() => setShowRagPicker(false)} />
-                                <div className="absolute bottom-full left-0 mb-3 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl z-20 p-2 animate-in fade-in zoom-in-95">
+                                <div className="absolute bottom-full left-0 mb-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl z-20 p-1 animate-in fade-in zoom-in-95">
                                     <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
                                         <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">RAG Knowledge Base</span>
                                     </div>
@@ -124,6 +124,10 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                                 <span className="max-w-[100px] truncate">{selectedCollection}</span>
                             </div>
                         )}
+                    </div>
+
+                    <div className="text-xs mt-1">
+                        Press Enter to send, Shift + Enter for new line
                     </div>
 
                     {/* Right Side: Model Selector & Send */}
@@ -173,9 +177,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                         </button>
                     </div>
                 </div>
-            </div>
-            <div className="text-xs mt-2">
-                Press Enter to send, Shift + Enter for new line
             </div>
         </div>
     );
