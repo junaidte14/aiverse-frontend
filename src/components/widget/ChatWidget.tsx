@@ -81,7 +81,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
             if (isMinimized) {
                 dimensions = { width: '300px', height: '56px' };
             } else {
-                dimensions = { width: '440px', height: '620px' }; // Expanded state
+                dimensions = { width: '420px', height: '600px' }; // Expanded state
             }
         }
 
