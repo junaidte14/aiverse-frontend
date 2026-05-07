@@ -1,4 +1,4 @@
-import { Bot, ChevronDown, FileText, User } from 'lucide-react';
+import { Bot, ChevronDown, FileText, User, Check, Copy } from 'lucide-react';
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -9,6 +9,56 @@ import type { Message } from '../types/chat';
 interface ChatMessageProps {
     message: Message;
 }
+
+// Place this component ABOVE or OUTSIDE your ChatMessage component
+const CodeBlock = ({ language, value }: { language: string; value: string }) => {
+    const [copied, setCopied] = useState(false);
+
+    const copyToClipboard = () => {
+        navigator.clipboard.writeText(value);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <div className="group relative my-6 rounded-xl overflow-hidden border border-gray-800 bg-gray-950">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-800">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    {language || 'code'}
+                </span>
+                <button
+                    onClick={copyToClipboard}
+                    className="flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors"
+                >
+                    {copied ? (
+                        <>
+                            <Check className="w-3.5 h-3.5 text-green-500" />
+                            <span className="text-[10px] font-bold text-green-500">COPIED</span>
+                        </>
+                    ) : (
+                        <>
+                            <Copy className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-bold">COPY</span>
+                        </>
+                    )}
+                </button>
+            </div>
+            <SyntaxHighlighter
+                style={codeTheme}
+                language={language}
+                PreTag="div"
+                customStyle={{
+                    margin: 0,
+                    padding: '1.5rem',
+                    fontSize: '0.85rem',
+                    lineHeight: '1.6',
+                }}
+            >
+                {value}
+            </SyntaxHighlighter>
+        </div>
+    );
+};
 
 export const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ message }) => {
     const isUser = message.role === 'user';
@@ -67,23 +117,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ message }) 
 
                                 // 2. SYNTAX HIGHLIGHTED BLOCKS (Actual multiline code)
                                 if (match && !message.isStreaming) {
-                                    return (
-                                        <div className="my-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-                                            <SyntaxHighlighter
-                                                style={codeTheme}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                customStyle={{
-                                                    margin: 0,
-                                                    padding: '1.25rem',
-                                                    fontSize: '0.85rem',
-                                                    lineHeight: '1.6',
-                                                }}
-                                            >
-                                                {content}
-                                            </SyntaxHighlighter>
-                                        </div>
-                                    );
+                                    return <CodeBlock language={match ? match[1] : ''} value={content} />;
                                 }
 
                                 // 3. FALLBACK FOR UNKNOWN MULTILINE BLOCKS
