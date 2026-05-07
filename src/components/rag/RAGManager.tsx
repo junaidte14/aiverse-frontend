@@ -14,13 +14,12 @@ import { SourceManager } from './SourceManager';
 export const RAGManager: React.FC = () => {
     const [collectionStats, setCollectionStats] = useState<RAGCollection | null>(null);
     const [newCollectionName, setNewCollectionName] = useState('');
-    const [loading, setLoading] = useState(false);
     const [uploading, setUploading] = useState(false);
     const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(
         null
     );
     const [activeTab, setActiveTab] = useState<'sources' | 'upload'>('sources');
-    const { collections, selectedCollection, setSelectedCollection, fetchCollections } = useRagStore();
+    const { collections, selectedCollection, setSelectedCollection, fetchCollections, isLoading } = useRagStore();
 
     useEffect(() => {
         fetchCollections();
@@ -31,20 +30,6 @@ export const RAGManager: React.FC = () => {
             loadCollectionStats(selectedCollection);
         }
     }, [selectedCollection]);
-
-    const loadCollections = async () => {
-        setLoading(true);
-        try {
-            const data = await apiService.ragListCollections();
-            if (data.length > 0 && !selectedCollection) {
-                setSelectedCollection(data[0]);
-            }
-        } catch (error) {
-            console.error('Failed to load collections:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const loadCollectionStats = async (name: string) => {
         try {
@@ -72,8 +57,12 @@ export const RAGManager: React.FC = () => {
             setMessage({ type: 'error', text: 'Collection already exists' });
             return;
         }
-        await fetchCollections(); // Refresh store list
-        setSelectedCollection(newCollectionName);
+        setSelectedCollection(collectionName);
+        setCollectionStats({
+            collection_name: collectionName,
+            document_count: 0,
+            status: 'empty',
+        });
         setNewCollectionName('');
         setMessage({
             type: 'success',
@@ -125,7 +114,7 @@ export const RAGManager: React.FC = () => {
                 setCollectionStats(null);
             }
 
-            await loadCollections();
+            await fetchCollections();
         } catch (error: any) {
             setMessage({
                 type: 'error',
@@ -184,7 +173,7 @@ export const RAGManager: React.FC = () => {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="font-semibold text-gray-900">Collections</h2>
                             <button
-                                onClick={loadCollections}
+                                onClick={fetchCollections}
                                 className="p-2 hover:bg-gray-100 rounded"
                                 title="Refresh"
                             >
@@ -192,9 +181,10 @@ export const RAGManager: React.FC = () => {
                             </button>
                         </div>
 
-                        {loading ? (
+                        {isLoading ? (
                             <div className="text-center py-8 text-gray-500 text-sm">
-                                Loading...
+                                <div className="animate-spin mb-2">...</div> {/* Optional spinner */}
+                                Loading collections...
                             </div>
                         ) : collections.length === 0 ? (
                             <div className="text-center py-8 text-gray-500">
@@ -304,7 +294,6 @@ export const RAGManager: React.FC = () => {
                             {/* Content */}
                             {activeTab === 'sources' ? (
                                 <SourceManager
-                                    collectionName={selectedCollection}
                                     onSourcesChange={() => loadCollectionStats(selectedCollection)}
                                 />
                             ) : (

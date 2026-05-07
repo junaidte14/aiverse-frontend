@@ -36,7 +36,7 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
-                        🤖 AIVerse Chat
+                        iVersana
                     </h1>
                 </div>
 

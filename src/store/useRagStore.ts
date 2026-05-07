@@ -11,7 +11,7 @@ interface RagState {
     setSelectedCollection: (name: string | null) => void;
 }
 
-export const useRagStore = create<RagState>((set) => ({
+export const useRagStore = create<RagState>((set, get) => ({
     collections: [],
     selectedCollection: null,
     isLoading: false,
@@ -20,10 +20,13 @@ export const useRagStore = create<RagState>((set) => ({
         set({ isLoading: true });
         try {
             const data = await apiService.ragListCollections();
+            //console.log(data);
+            const currentSelected = get().selectedCollection;
             set({
                 collections: data,
-                // Auto-select first if none selected
-                selectedCollection: data.length > 0 ? data[0] : null
+                selectedCollection: (currentSelected && data.includes(currentSelected)) 
+                    ? currentSelected 
+                    : (data.length > 0 ? data[0] : null)
             });
         } catch (error) {
             console.error('Failed to load collections:', error);

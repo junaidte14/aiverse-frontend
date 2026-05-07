@@ -99,7 +99,7 @@ class ApiService {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
-            heartbeatTimeout: 300000, // 5 minutes
+            heartbeatTimeout: 18000000, // 60 minutes
             withCredentials: true
         }) as unknown as EventSource;
     }
@@ -431,12 +431,8 @@ class ApiService {
     }
 
     async ragListCollections(): Promise<string[]> {
-        //const response = await this.client.get('/rag/collections');
-        //console.log(response.data);
-        const data = [
-            "versana"
-        ];
-        return data;
+        const response = await this.client.get('/rag/collections');
+        return response.data;
     }
 
     async ragGetCollectionStats(collectionName: string): Promise<RAGCollection> {

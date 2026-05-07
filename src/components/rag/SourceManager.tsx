@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { apiService } from '../../services/api';
+import { useRagStore } from '../../store/useRagStore';
 
 interface RAGSource {
     id: number;
@@ -34,16 +35,23 @@ interface SyncProgress {
     error?: string;
 }
 
-export const SourceManager: React.FC = () => {
+interface SourceManagerProps {
+    onSourcesChange: () => void | Promise<void>;
+}
+
+export const SourceManager: React.FC<SourceManagerProps> = ({  
+    onSourcesChange
+}) => {
     const [sources, setSources] = useState<RAGSource[]>([]);
     const [loading, setLoading] = useState(true);
     const [showAddForm, setShowAddForm] = useState(false);
     const [syncProgress, setSyncProgress] = useState<Map<number, SyncProgress>>(new Map());
+    const { selectedCollection } = useRagStore();
 
     // Form state
     const [formData, setFormData] = useState({
         repo_url: '',
-        collection_name: '',
+        collection_name: selectedCollection ?? '',
         display_name: '',
         branch: '',
         auto_sync: false,
@@ -52,13 +60,15 @@ export const SourceManager: React.FC = () => {
 
     useEffect(() => {
         loadSources();
-    }, []);
+    }, [selectedCollection]);
 
     const loadSources = async () => {
         try {
             setLoading(true);
             const data = await apiService.ragListSources();
-            setSources(data);
+            // Filter list to only show sources belonging to the active collection
+            const filtered = data.filter((s: RAGSource) => s.collection_name === selectedCollection);
+            setSources(filtered);
         } catch (error) {
             console.error('Failed to load sources:', error);
         } finally {
@@ -68,19 +78,16 @@ export const SourceManager: React.FC = () => {
 
     const handleAddSource = async (e: React.FormEvent) => {
         e.preventDefault();
-
+        if (!selectedCollection) return;
         try {
-            await apiService.ragAddGitHubSource(formData);
-            setShowAddForm(false);
-            setFormData({
-                repo_url: '',
-                collection_name: '',
-                display_name: '',
-                branch: '',
-                auto_sync: false,
-                sync_interval_hours: 24,
+            // Override formData.collection_name with the prop
+            await apiService.ragAddGitHubSource({ 
+                ...formData, 
+                collection_name: selectedCollection 
             });
+            setShowAddForm(false);
             await loadSources();
+            onSourcesChange(); // Notify parent to refresh stats
         } catch (error: any) {
             alert(`Failed to add source: ${error.message}`);
         }
@@ -159,6 +166,7 @@ export const SourceManager: React.FC = () => {
                     // Reload sources after a short delay
                     setTimeout(() => {
                         loadSources();
+                        onSourcesChange();
                         // Clear progress after 3 seconds
                         setTimeout(() => {
                             setSyncProgress(prev => {
@@ -302,7 +310,7 @@ export const SourceManager: React.FC = () => {
                                     </label>
                                     <input
                                         type="text"
-                                        value={formData.collection_name}
+                                        value={formData.collection_name ?? ''}
                                         onChange={(e) => setFormData({ ...formData, collection_name: e.target.value })}
                                         placeholder="my-knowledge-base"
                                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
