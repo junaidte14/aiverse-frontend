@@ -28,11 +28,10 @@ class AIVerseWidget {
             primaryColor: '#9333ea',
             position: 'bottom-right',
             title: 'AI Assistant',
-            apiUrl: import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/',
             ...config,
         };
 
-        this.baseUrl = 'https://aiverse-pi.vercel.app';
+        this.baseUrl = 'https://iversana.vercel.app';
         this.init();
         this.setupListeners();
     }
@@ -54,7 +53,7 @@ class AIVerseWidget {
                 this.iframe.style.height = event.data.height;
 
                 // Toggle pointer-events if needed
-                if (event.data.width === '80px') {
+                if (event.data.width === '56px') {
                     // Small bubble state
                     this.iframe.style.pointerEvents = 'auto';
                 } else {
@@ -84,6 +83,8 @@ class AIVerseWidget {
     private render() {
         this.iframe = document.createElement('iframe');
         this.iframe.src = this.buildWidgetUrl();
+        this.iframe.setAttribute('allowtransparency', 'true');
+        this.iframe.setAttribute('frameborder', '0');
 
         // Ensure the iframe has a transition for smooth resizing
         Object.assign(this.iframe.style, {
@@ -91,8 +92,8 @@ class AIVerseWidget {
             bottom: '0',
             right: this.config.position === 'bottom-left' ? 'auto' : '0',
             left: this.config.position === 'bottom-left' ? '0' : 'auto',
-            width: '80px',
-            height: '80px',
+            width: '56px',
+            height: '56px',
             border: 'none',
             zIndex: '999999',
             background: 'transparent',

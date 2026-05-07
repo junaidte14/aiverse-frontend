@@ -8,10 +8,9 @@ class AIVerseWidget {
             primaryColor: '#9333ea',
             position: 'bottom-right',
             title: 'AI Assistant',
-            apiUrl: import.meta.env.VITE_API_URL || 'https://junaidte14-aiverse.hf.space/api/v1/',
             ...config,
         };
-        this.baseUrl = 'https://aiverse-pi.vercel.app';
+        this.baseUrl = 'https://iversana.vercel.app';
         this.init();
         this.setupListeners(); // Listen for resize events from React
     }
@@ -45,6 +44,8 @@ class AIVerseWidget {
     render() {
         this.iframe = document.createElement('iframe');
         this.iframe.src = this.buildWidgetUrl();
+        this.iframe.setAttribute('allowtransparency', 'true');
+        this.iframe.setAttribute('frameborder', '0');
 
         // Start with small dimensions (the bubble size)
         Object.assign(this.iframe.style, {
@@ -52,8 +53,8 @@ class AIVerseWidget {
             bottom: '0',
             right: this.config.position === 'bottom-left' ? 'auto' : '0',
             left: this.config.position === 'bottom-left' ? '0' : 'auto',
-            width: '80px',  // Start small
-            height: '80px', // Start small
+            width: '56px',  // Start small
+            height: '56px', // Start small
             border: 'none',
             zIndex: '999999',
             background: 'transparent',
