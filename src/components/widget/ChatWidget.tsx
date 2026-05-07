@@ -75,11 +75,11 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     useEffect(() => {
         // Determine dimensions based on state
-        let dimensions = { width: '80px', height: '80px' }; // Default closed state (the bubble)
+        let dimensions = { width: '56px', height: '56px' }; // Default closed state (the bubble)
 
         if (isOpen) {
             if (isMinimized) {
-                dimensions = { width: '300px', height: '80px' };
+                dimensions = { width: '300px', height: '56px' };
             } else {
                 dimensions = { width: '440px', height: '620px' }; // Expanded state
             }
@@ -130,7 +130,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         await sendMessage(text);
     };
 
-    const positionClasses = position === 'bottom-right' ? 'bottom-6 right-6' : 'bottom-6 left-6';
+    const positionClasses = position === 'bottom-right' ? 'bottom-0 right-0' : 'bottom-0 left-0';
 
     return (
         <div className={`fixed ${positionClasses} z-50 font-sans pointer-events-auto`}>
