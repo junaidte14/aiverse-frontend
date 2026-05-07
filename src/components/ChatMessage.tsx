@@ -22,42 +22,77 @@ export const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ message }) 
                 </div>
             )}
 
-            <div className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-md ${isUser
-                ? 'bg-gradient-to-br from-primary-500 to-secondary-500 text-white'
-                : 'bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100'
-                }`}>
-                <div className="prose prose-sm dark:prose-invert max-w-none break-words prose-p:leading-relaxed">
+            <div className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-md bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100`}>
+                <div className="prose prose-sm dark:prose-invert max-w-none 
+                prose-p:leading-relaxed prose-p:mb-4 
+                prose-headings:font-bold prose-headings:tracking-tight
+                prose-pre:bg-transparent prose-pre:p-0
+                prose-code:before:content-none prose-code:after:content-none">
                     <ReactMarkdown
                         remarkPlugins={[remarkGfm]}
                         components={{
-                            code({ inline, className, children }: any) {
+                            // Map H3 (or whichever header your RAG uses) to a Title style
+                            h3: ({children}) => (
+                                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-6 mb-3 first:mt-0 pb-2 border-b border-gray-100 dark:border-gray-800">
+                                {children}
+                                </h3>
+                            ),
+                            // Style "Steps" if they follow a pattern like "Step 1:"
+                            p: ({children}) => {
+                                const text = String(children);
+                                if (text.startsWith("Step ")) {
+                                return (
+                                    <p className="flex items-center gap-2 font-semibold text-primary-600 dark:text-primary-400 mt-6 mb-2 uppercase tracking-wider text-xs">
+                                    <span className="w-8 h-[1px] bg-primary-500/30"></span>
+                                    {children}
+                                    </p>
+                                );
+                                }
+                                return <p className="leading-7 mb-4 last:mb-0 text-gray-700 dark:text-gray-300">{children}</p>;
+                            },
+                            code({ inline, className, children, ...props }: any) {
                                 const match = /language-(\w+)/.exec(className || '');
-                                if (!inline && match && !message.isStreaming) {
+                                const content = String(children).replace(/\n$/, '');
+
+                                if (inline || (!match && !content.includes('\n'))) {
                                     return (
-                                        <SyntaxHighlighter
-                                            style={codeTheme}
-                                            language={match[1]}
-                                            PreTag="div"
-                                            customStyle={{
-                                                borderRadius: '0.5rem',
-                                                margin: '0.5rem 0',
-                                                fontSize: '0.85rem',
-                                            }}
+                                        <code 
+                                            className="px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-primary-600 dark:text-primary-400 font-mono text-[0.9em] whitespace-nowrap"
+                                            {...props}
                                         >
-                                            {String(children).replace(/\n$/, '')}
-                                        </SyntaxHighlighter>
+                                            {content}
+                                        </code>
                                     );
                                 }
 
+                                // 2. SYNTAX HIGHLIGHTED BLOCKS (Actual multiline code)
+                                if (match && !message.isStreaming) {
+                                    return (
+                                        <div className="my-4 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+                                            <SyntaxHighlighter
+                                                style={codeTheme}
+                                                language={match[1]}
+                                                PreTag="div"
+                                                customStyle={{
+                                                    margin: 0,
+                                                    padding: '1.25rem',
+                                                    fontSize: '0.85rem',
+                                                    lineHeight: '1.6',
+                                                }}
+                                            >
+                                                {content}
+                                            </SyntaxHighlighter>
+                                        </div>
+                                    );
+                                }
+
+                                // 3. FALLBACK FOR UNKNOWN MULTILINE BLOCKS
                                 return (
-                                    <code className={`${inline
-                                        ? 'px-1 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-primary-600 dark:text-primary-400'
-                                        : 'block p-3 rounded-lg my-2 whitespace-pre-wrap bg-gray-950 text-gray-100'
-                                        }`}>
-                                        {children}
-                                    </code>
+                                    <pre className="block w-max max-w-full p-4 rounded-xl my-4 bg-gray-950 text-gray-100 overflow-x-auto font-mono text-sm">
+                                        <code>{content}</code>
+                                    </pre>
                                 );
-                            },
+                            }
                         }}
                     >
                         {message.content}
