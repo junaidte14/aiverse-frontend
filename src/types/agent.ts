@@ -88,6 +88,8 @@ export interface AgentSession {
     retry_count: number;
     started_at: string;
     completed_at?: string;
+    welcome_message?: string;
+    first_prompt?: string;
 }
 
 export interface AgentMessageRequest {

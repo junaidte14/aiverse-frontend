@@ -92,7 +92,9 @@ class AgentApiService {
         console.log(agentId);
         const response = await this.client.post('/agents/sessions', {
             agent_id: agentId,
-            conversation_id: conversationId,
+            conversation_id: conversationId
+                ? String(conversationId)
+                : undefined
         });
         return response.data;
     }

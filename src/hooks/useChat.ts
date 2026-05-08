@@ -39,8 +39,11 @@ export const useChat = (): UseChatReturn => {
     const { selectedCollection } = useRagStore();
     const isLoading = messages.some(m => m.isStreaming);
     const isMounted = useRef(true);
-    const { selectedAgent } = useAgentStore();
-    const [agentSession, setAgentSession] = useState<AgentSession | null>(null);
+    const {
+        selectedAgent,
+        activeAgentSession: agentSession,
+        setActiveAgentSession: setAgentSession
+    } = useAgentStore();
 
     useEffect(() => {
         return () => {
@@ -52,6 +55,61 @@ export const useChat = (): UseChatReturn => {
         setMessages([]);
         setError(null);
     }, [setMessages]);
+
+    const agentInitializing = useRef(false);
+    useEffect(() => {
+        const initializeAgent = async () => {
+            if (
+                !selectedAgent ||
+                agentSession ||
+                agentInitializing.current
+            ) {
+                return;
+            }
+            agentInitializing.current = true;
+            try {
+                // Ensure conversation exists
+                const user = useStore.getState().user;
+                if (!user) return;
+                const conversation = await apiService.createNewConversation(
+                    selectedAgent.name,
+                    settings.model,
+                    user.id
+                );
+                const newConversationId = String(conversation.id);
+                setActiveConversationId(newConversationId);
+                useConversationStore.getState().upsertConversation({
+                    id: newConversationId,
+                    title: conversation.title,
+                    model_name: conversation.model_name,
+                    updated_at: conversation.updated_at,
+                });
+                // Start workflow session
+                const session = await agentApiService.startAgentSession(
+                    selectedAgent.id,
+                    newConversationId
+                );
+                setAgentSession(session);
+                const initialMessage =
+                    session.welcome_message && session.first_prompt
+                        ? `${session.welcome_message}\n\n${session.first_prompt}`
+                        : session.welcome_message || session.first_prompt;
+
+                if (initialMessage) {
+                    addMessage({
+                        role: 'assistant',
+                        content: initialMessage,
+                        timestamp: new Date(),
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to initialize agent:", err);
+            } finally {
+                agentInitializing.current = false;
+            }
+        };
+        initializeAgent();
+    }, [selectedAgent]);
 
     /**
      * NEW: Specialized handler for RAG queries
@@ -145,10 +203,6 @@ export const useChat = (): UseChatReturn => {
                             updated_at: new Date().toISOString(),
                         });
                     }
-                    addMessage({
-                        role: 'assistant',
-                        content: response.content
-                    });
                 }
             } catch (err) {
                 throw err;
@@ -236,41 +290,6 @@ export const useChat = (): UseChatReturn => {
         [settings, conversationId, addMessage]
     );
 
-    const startAgentSession = useCallback(async () => {
-        if (!selectedAgent || !conversationId) return;
-
-        try {
-            const session = await agentApiService.startAgentSession(
-                selectedAgent.id,
-                conversationId ?? undefined
-            );
-            console.log(session);
-            setAgentSession(session);
-
-            if (selectedAgent.welcome_message) {
-                addMessage({
-                    role: 'assistant',
-                    content: selectedAgent.welcome_message,
-                    timestamp: new Date(),
-                });
-            }
-        } catch (error) {
-            console.error('Failed to start agent session:', error);
-            setError('Could not initialize agent session.');
-        }
-    }, [selectedAgent, conversationId, addMessage]);
-
-    useEffect(() => {
-        if (selectedAgent && !agentSession) {
-            startAgentSession();
-        }
-        
-        // Cleanup session if agent is deselected
-        if (!selectedAgent && agentSession) {
-            setAgentSession(null);
-        }
-    }, [selectedAgent, agentSession, startAgentSession]);
-
     const sendMessageAgent = useCallback(async (content: string, overrideSession?: AgentSession) => {
         // Use the override if provided, otherwise fallback to state
         const currentSession = overrideSession || agentSession;
@@ -295,8 +314,7 @@ export const useChat = (): UseChatReturn => {
 
             if (response.is_completed) {
                 setAgentSession(null);
-                // Optionally clear selected agent here if you want to return to regular chat
-                // setSelectedAgent(null); 
+                useAgentStore.getState().setSelectedAgent(null); 
                 addMessage({
                     role: 'assistant',
                     content: '✅ Workflow completed.',
@@ -331,22 +349,8 @@ export const useChat = (): UseChatReturn => {
 
             // 2. Trigger API call OUTSIDE of setMessages
             try {
-                if (selectedAgent) {
-                    let activeSession = agentSession;
-                    // Emergency check: if state hasn't caught up, try to start it inline
-                    if (!activeSession) {
-                        try {
-                            activeSession = await agentApiService.startAgentSession(
-                                selectedAgent.id,
-                                conversationId ?? undefined
-                            );
-                            setAgentSession(activeSession);
-                        } catch (sessionErr) {
-                            throw new Error("Failed to initialize Agent workflow.");
-                        }
-                    }
-                    // Explicitly call agent logic
-                    await sendMessageAgent(content.trim(), activeSession);
+                if (selectedAgent && agentSession) {
+                    await sendMessageAgent(content.trim(), agentSession);
                 } else if (selectedCollection) {
                     await sendMessageRag(content.trim());
                 } else if (settings.stream) {
