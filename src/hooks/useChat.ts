@@ -1,5 +1,6 @@
 /**
  * Custom hook for managing chat state and API interactions
+ * PRODUCTION-READY VERSION with race condition fixes
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -9,7 +10,6 @@ import { useConversationStore } from '../store/useConversationStore';
 import { useRagStore } from '../store/useRagStore';
 import { useStore } from '../store/useStore';
 import type { ChatSettings, Message } from '../types/chat';
-import type { AgentSession } from '../types/agent';
 import { useAgentStore } from '../store/useAgentStore';
 
 export interface UseChatReturn {
@@ -35,14 +35,17 @@ export const useChat = (): UseChatReturn => {
         addMessage,
         updateMessage,
     } = useStore();
+    
     // Get RAG state
     const { selectedCollection } = useRagStore();
     const isLoading = messages.some(m => m.isStreaming);
     const isMounted = useRef(true);
+    
     const {
         selectedAgent,
-        activeAgentSession: agentSession,
-        setActiveAgentSession: setAgentSession
+        initializeAgentSession,
+        activeAgentSession,
+        setActiveAgentSession,
     } = useAgentStore();
 
     useEffect(() => {
@@ -56,71 +59,28 @@ export const useChat = (): UseChatReturn => {
         setError(null);
     }, [setMessages]);
 
-    const agentInitializing = useRef(false);
     useEffect(() => {
-        const initializeAgent = async () => {
-            if (
-                !selectedAgent ||
-                agentSession ||
-                agentInitializing.current
-            ) {
-                return;
-            }
-            agentInitializing.current = true;
-            try {
-                // Ensure conversation exists
-                const user = useStore.getState().user;
-                if (!user) return;
-                const conversation = await apiService.createNewConversation(
-                    selectedAgent.name,
-                    settings.model,
-                    user.id
-                );
-                const newConversationId = String(conversation.id);
-                setActiveConversationId(newConversationId);
-                useConversationStore.getState().upsertConversation({
-                    id: newConversationId,
-                    title: conversation.title,
-                    model_name: conversation.model_name,
-                    updated_at: conversation.updated_at,
-                });
-                // Start workflow session
-                const session = await agentApiService.startAgentSession(
-                    selectedAgent.id,
-                    newConversationId
-                );
-                setAgentSession(session);
-                const initialMessage =
-                    session.welcome_message && session.first_prompt
-                        ? `${session.welcome_message}\n\n${session.first_prompt}`
-                        : session.welcome_message || session.first_prompt;
-
-                if (initialMessage) {
-                    addMessage({
-                        role: 'assistant',
-                        content: initialMessage,
-                        timestamp: new Date(),
-                    });
-                }
-            } catch (err) {
-                console.error("Failed to initialize agent:", err);
-            } finally {
-                agentInitializing.current = false;
-            }
-        };
-        initializeAgent();
-    }, [selectedAgent]);
+        if (!selectedAgent) return;
+        const user = useStore.getState().user;
+        initializeAgentSession(selectedAgent, {
+            userId: user?.id,
+            model: useStore.getState().settings.model,
+            setActiveConversationId,
+            upsertConversation: useConversationStore.getState().upsertConversation,
+            addMessage,
+            setError,
+        });
+    }, [selectedAgent?.id, initializeAgentSession]);
 
     /**
-     * NEW: Specialized handler for RAG queries
-     * This follows the non-streaming pattern established in your RAGChat.tsx
+     * RAG query handler (non-streaming)
      */
     const sendMessageRag = useCallback(
         async (content: string) => {
             const assistantMessage = addMessage({
                 role: 'assistant',
                 content: 'Searching knowledge base...',
-                isStreaming: true, // Show loading state
+                isStreaming: true,
             });
 
             try {
@@ -136,7 +96,7 @@ export const useChat = (): UseChatReturn => {
 
                 updateMessage(assistantMessage.id, {
                     content: response.answer,
-                    sources: response.sources, // Ensure your types support this
+                    sources: response.sources,
                     isStreaming: false,
                 });
 
@@ -158,29 +118,31 @@ export const useChat = (): UseChatReturn => {
                 });
             }
         },
-        [selectedCollection, settings, conversationId, addMessage, updateMessage]
+        [selectedCollection, settings, conversationId, addMessage, updateMessage, setActiveConversationId]
     );
 
+    /**
+     * Non-streaming chat handler
+     */
     const sendMessageNonStream = useCallback(
         async (content: string, currentHistory: Message[]) => {
             const assistantMessage = addMessage({
                 role: 'assistant',
-                content: 'Loading...',
-                isStreaming: true, // Show loading state
+                content: 'Thinking...',
+                isStreaming: true,
             });
+            
             try {
-                // Prepare messages for the backend (role and content only)
                 const chatMessages = currentHistory.map(msg => ({
                     role: msg.role,
                     content: msg.content,
-                    isStreaming: true,
                 }));
 
                 const response = await apiService.multiProviderChat({
                     provider: settings.provider,
                     model: settings.model,
-                    messages: chatMessages, // Required List[ChatMessage]
-                    message: content, // Included for backward compatibility
+                    messages: chatMessages,
+                    message: content,
                     conversation_id: conversationId || undefined,
                     temperature: settings.temperature,
                     max_tokens: settings.max_tokens,
@@ -204,13 +166,20 @@ export const useChat = (): UseChatReturn => {
                         });
                     }
                 }
-            } catch (err) {
-                throw err;
+            } catch (err: any) {
+                console.error("Non-stream error:", err);
+                updateMessage(assistantMessage.id, {
+                    content: `Error: ${err.response?.data?.detail || 'Failed to send message'}`,
+                    isStreaming: false,
+                });
             }
         },
-        [settings, conversationId, addMessage, setActiveConversationId]
+        [settings, conversationId, addMessage, updateMessage, setActiveConversationId]
     );
 
+    /**
+     * Streaming chat handler
+     */
     const sendMessageStream = useCallback(
         async (content: string, currentHistory: Message[]) => {
             const assistantMessage = addMessage({
@@ -226,7 +195,7 @@ export const useChat = (): UseChatReturn => {
             let hasSetId = false;
             let lastUpdateTime = 0;
             const THROTTLE_MS = 64;
-            const isNewConversation = !conversationId; // capture before stream starts
+            const isNewConversation = !conversationId;
 
             try {
                 const stream = apiService.streamMultiProviderChat({
@@ -290,49 +259,67 @@ export const useChat = (): UseChatReturn => {
         [settings, conversationId, addMessage]
     );
 
-    const sendMessageAgent = useCallback(async (content: string, overrideSession?: AgentSession) => {
-        // Use the override if provided, otherwise fallback to state
-        const currentSession = overrideSession || agentSession;
-        if (!currentSession) return;
+    /**
+     * Agent message handler
+     */
+    const sendMessageAgent = useCallback(
+        async (content: string) => {
+            const currentSession = activeAgentSession;
 
-        const assistantMessage = addMessage({
-            role: 'assistant',
-            content: '...',
-            isStreaming: true,
-        });
+            if (!currentSession) {
+                setError("No active agent session");
+                return;
+            }
 
-        try {
-            const response = await agentApiService.sendAgentMessage(
-                currentSession.id,
-                content
-            );
-
-            updateMessage(assistantMessage.id, {
-                content: response.message,
-                isStreaming: false,
+            const assistantMessage = addMessage({
+                role: 'assistant',
+                content: '...',
+                isStreaming: true,
             });
 
-            if (response.is_completed) {
-                setAgentSession(null);
-                useAgentStore.getState().setSelectedAgent(null); 
-                addMessage({
-                    role: 'assistant',
-                    content: '✅ Workflow completed.',
-                    timestamp: new Date(),
+            try {
+                const response = await agentApiService.sendAgentMessage(
+                    currentSession.id,
+                    content
+                );
+
+                updateMessage(assistantMessage.id, {
+                    content: response.message,
+                    isStreaming: false,
+                });
+
+                if (response.is_completed) {
+                    setActiveAgentSession(null);
+                    useAgentStore.getState().setSelectedAgent(null);
+
+                    addMessage({
+                        role: 'assistant',
+                        content:
+                            '✅ Workflow completed. You can now chat normally or select another agent.',
+                        timestamp: new Date(),
+                    });
+                }
+            } catch (err: any) {
+                console.error("Agent error:", err);
+
+                updateMessage(assistantMessage.id, {
+                    content: `Error: ${
+                        err.response?.data?.detail || 'Agent failed to respond'
+                    }`,
+                    isStreaming: false,
                 });
             }
-        } catch (err: any) {
-            updateMessage(assistantMessage.id, {
-                content: `Error: ${err.response?.data?.detail || 'Agent failed to respond'}`,
-                isStreaming: false,
-            });
-        }
-    }, [agentSession, addMessage, updateMessage]);
+        },
+        [activeAgentSession, addMessage, updateMessage, setError, setActiveAgentSession]
+    );
 
+    /**
+     * FIXED: Main send message function with proper state management
+     */
     const sendMessage = useCallback(
         async (content: string) => {
-            const isStreaming = messages.some(m => m.isStreaming);
-            if (!content.trim() || isStreaming) return;
+            const isCurrentlyStreaming = messages.some(m => m.isStreaming);
+            if (!content.trim() || isCurrentlyStreaming) return;
 
             setError(null);
 
@@ -343,29 +330,49 @@ export const useChat = (): UseChatReturn => {
                 timestamp: new Date(),
             };
 
-            // 1. Update UI first
+            // Add user message to UI
             addMessage(userMsg);
-            const updatedHistory = [...messages, userMsg];
+            
+            // Get current history AFTER adding the message
+            // This ensures we have the most up-to-date state
+            const getCurrentHistory = (): Message[] => {
+                return useStore.getState().messages;
+            };
 
-            // 2. Trigger API call OUTSIDE of setMessages
             try {
-                if (selectedAgent && agentSession) {
-                    await sendMessageAgent(content.trim(), agentSession);
+                if (selectedAgent && activeAgentSession) {
+                    await sendMessageAgent(content.trim());
                 } else if (selectedCollection) {
+                    // RAG mode
                     await sendMessageRag(content.trim());
-                } else if (settings.stream) {
-                    await sendMessageNonStream(content.trim(), updatedHistory);
                 } else {
-                    await sendMessageNonStream(content.trim(), updatedHistory);
+                    // Standard chat mode
+                    const currentHistory = getCurrentHistory();
+                    
+                    if (settings.stream) {
+                        await sendMessageStream(content.trim(), currentHistory);
+                    } else {
+                        await sendMessageNonStream(content.trim(), currentHistory);
+                    }
                 }
             } catch (err) {
                 console.error("Chat Error:", err);
-                setError("Failed to send message");
-            } finally {
+                setError("Failed to send message. Please try again.");
             }
         },
-        [messages, settings, agentSession, 
-        selectedAgent, sendMessageAgent, sendMessageRag, sendMessageStream, sendMessageNonStream, isLoading]
+        [
+            messages,
+            settings,
+            activeAgentSession,
+            selectedAgent,
+            selectedCollection,
+            sendMessageAgent,
+            sendMessageRag,
+            sendMessageStream,
+            sendMessageNonStream,
+            addMessage,
+            setError
+        ]
     );
 
     return {

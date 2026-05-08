@@ -100,18 +100,18 @@ export interface AgentMessageRequest {
 
 export interface AgentMessageResponse {
     message: string;
-    current_step?: string;
-    step_prompt?: string;
+    current_step?: string | null;
+    step_prompt?: string | null;
     is_completed: boolean;
-    collected_data?: Record<string, any>;
-    next_action?: string;
+    collected_data?: Record<string, any> | null;
+    next_action?: 'continue' | 'completed' | 'failed' | null;
     retry?: boolean;
     failed?: boolean;
     progress?: {
         total_steps: number;
         completed_steps: number;
         progress_percentage: number;
-    };
+    } | null;
 }
 
 export interface AgentTemplate {
