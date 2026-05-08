@@ -81,7 +81,7 @@ export interface Agent {
 export interface AgentSession {
     id: number;
     agent_id: number;
-    conversation_id?: number;
+    conversation_id?: string;
     status: SessionStatus;
     current_step?: string;
     collected_data: Record<string, any>;

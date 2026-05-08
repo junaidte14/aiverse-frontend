@@ -1,4 +1,4 @@
-import { BarChart3, Cog, Menu, MessageCircleCheckIcon, Settings, Users, X } from 'lucide-react';
+import { BarChart3, Cog, Bot, Menu, MessageCircleCheckIcon, Settings, Users, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface AdminLayoutProps {
@@ -18,6 +18,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
         { id: 'dashboard', label: 'Analytics', icon: BarChart3 },
         { id: 'users', label: 'Users', icon: Users },
         { id: 'rag', label: 'RAG', icon: Cog },
+        { id: 'agents', label: 'Agents', icon: Bot },
         { id: 'convs', label: 'Conversations', icon: MessageCircleCheckIcon },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];

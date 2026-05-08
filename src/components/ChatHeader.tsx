@@ -22,6 +22,9 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
 
     useEffect(() => {
         checkConnection();
+        // Optional: Check every 30 seconds
+        const interval = setInterval(checkConnection, 120000);
+        return () => clearInterval(interval);
     }, []);
 
     const checkConnection = async () => {

@@ -7,6 +7,8 @@ import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useRagStore } from '../store/useRagStore';
 import { useStore } from '../store/useStore';
 import { ProviderSelector } from './ProviderSelector';
+import { AgentSelector } from './agents/AgentSelector';
+import { useAgentStore } from '../store/useAgentStore';
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -25,6 +27,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const { settings, updateSettings } = useStore();
     const [showRagPicker, setShowRagPicker] = useState(false);
     const { collections, selectedCollection, setSelectedCollection, fetchCollections } = useRagStore();
+    const { selectedAgent, setSelectedAgent } = useAgentStore();
 
     // Auto-resize textarea
     useEffect(() => {
@@ -73,6 +76,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <div className="flex items-center justify-between px-4 py-1 border-t bg-muted/30">
 
                     <div className="flex items-center gap-1 relative">
+                        {/* Agent Selector Integration */}
+                        <AgentSelector 
+                            selectedAgent={selectedAgent} 
+                            onSelect={(agent) => {
+                                setSelectedAgent(agent);
+                                if (agent) {
+                                    setSelectedCollection(null); // Clear RAG if agent is active
+                                } 
+                            }} 
+                        />
+
                         {/* Collection Popover */}
                         {showRagPicker && (
                             <>

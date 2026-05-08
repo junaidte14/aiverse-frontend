@@ -5,6 +5,7 @@ import { AdminConversations } from './adminListConversations';
 import { AnalyticsDashboardComp } from './AnalyticsDashboard';
 import { Settings } from './Settings';
 import { UserManagement } from './UserManagement';
+import { AgentList } from '../agents/AgentList';
 
 export const AdminPanel: React.FC = () => {
     const [activeTab, setActiveTab] = useState('dashboard');
@@ -16,6 +17,7 @@ export const AdminPanel: React.FC = () => {
             {activeTab === 'rag' && <RAGManager />}
             {activeTab === 'convs' && <AdminConversations />}
             {activeTab === 'settings' && <Settings />}
+            {activeTab === 'agents' && <AgentList />}
         </AdminLayout>
     );
 };

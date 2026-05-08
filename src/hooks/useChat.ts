@@ -4,10 +4,13 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { apiService } from '../services/api';
+import { agentApiService } from '../services/agentApi';
 import { useConversationStore } from '../store/useConversationStore';
 import { useRagStore } from '../store/useRagStore';
 import { useStore } from '../store/useStore';
 import type { ChatSettings, Message } from '../types/chat';
+import type { AgentSession } from '../types/agent';
+import { useAgentStore } from '../store/useAgentStore';
 
 export interface UseChatReturn {
     messages: Message[];
@@ -36,6 +39,8 @@ export const useChat = (): UseChatReturn => {
     const { selectedCollection } = useRagStore();
     const isLoading = messages.some(m => m.isStreaming);
     const isMounted = useRef(true);
+    const { selectedAgent } = useAgentStore();
+    const [agentSession, setAgentSession] = useState<AgentSession | null>(null);
 
     useEffect(() => {
         return () => {
@@ -231,6 +236,81 @@ export const useChat = (): UseChatReturn => {
         [settings, conversationId, addMessage]
     );
 
+    const startAgentSession = useCallback(async () => {
+        if (!selectedAgent || !conversationId) return;
+
+        try {
+            const session = await agentApiService.startAgentSession(
+                selectedAgent.id,
+                conversationId ?? undefined
+            );
+            console.log(session);
+            setAgentSession(session);
+
+            if (selectedAgent.welcome_message) {
+                addMessage({
+                    role: 'assistant',
+                    content: selectedAgent.welcome_message,
+                    timestamp: new Date(),
+                });
+            }
+        } catch (error) {
+            console.error('Failed to start agent session:', error);
+            setError('Could not initialize agent session.');
+        }
+    }, [selectedAgent, conversationId, addMessage]);
+
+    useEffect(() => {
+        if (selectedAgent && !agentSession) {
+            startAgentSession();
+        }
+        
+        // Cleanup session if agent is deselected
+        if (!selectedAgent && agentSession) {
+            setAgentSession(null);
+        }
+    }, [selectedAgent, agentSession, startAgentSession]);
+
+    const sendMessageAgent = useCallback(async (content: string, overrideSession?: AgentSession) => {
+        // Use the override if provided, otherwise fallback to state
+        const currentSession = overrideSession || agentSession;
+        if (!currentSession) return;
+
+        const assistantMessage = addMessage({
+            role: 'assistant',
+            content: '...',
+            isStreaming: true,
+        });
+
+        try {
+            const response = await agentApiService.sendAgentMessage(
+                currentSession.id,
+                content
+            );
+
+            updateMessage(assistantMessage.id, {
+                content: response.message,
+                isStreaming: false,
+            });
+
+            if (response.is_completed) {
+                setAgentSession(null);
+                // Optionally clear selected agent here if you want to return to regular chat
+                // setSelectedAgent(null); 
+                addMessage({
+                    role: 'assistant',
+                    content: '✅ Workflow completed.',
+                    timestamp: new Date(),
+                });
+            }
+        } catch (err: any) {
+            updateMessage(assistantMessage.id, {
+                content: `Error: ${err.response?.data?.detail || 'Agent failed to respond'}`,
+                isStreaming: false,
+            });
+        }
+    }, [agentSession, addMessage, updateMessage]);
+
     const sendMessage = useCallback(
         async (content: string) => {
             const isStreaming = messages.some(m => m.isStreaming);
@@ -251,7 +331,23 @@ export const useChat = (): UseChatReturn => {
 
             // 2. Trigger API call OUTSIDE of setMessages
             try {
-                if (selectedCollection) {
+                if (selectedAgent) {
+                    let activeSession = agentSession;
+                    // Emergency check: if state hasn't caught up, try to start it inline
+                    if (!activeSession) {
+                        try {
+                            activeSession = await agentApiService.startAgentSession(
+                                selectedAgent.id,
+                                conversationId ?? undefined
+                            );
+                            setAgentSession(activeSession);
+                        } catch (sessionErr) {
+                            throw new Error("Failed to initialize Agent workflow.");
+                        }
+                    }
+                    // Explicitly call agent logic
+                    await sendMessageAgent(content.trim(), activeSession);
+                } else if (selectedCollection) {
                     await sendMessageRag(content.trim());
                 } else if (settings.stream) {
                     await sendMessageNonStream(content.trim(), updatedHistory);
@@ -264,7 +360,8 @@ export const useChat = (): UseChatReturn => {
             } finally {
             }
         },
-        [messages, settings, sendMessageRag, sendMessageStream, sendMessageNonStream, isLoading]
+        [messages, settings, agentSession, 
+        selectedAgent, sendMessageAgent, sendMessageRag, sendMessageStream, sendMessageNonStream, isLoading]
     );
 
     return {
