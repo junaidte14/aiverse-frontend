@@ -4,7 +4,7 @@
 
 import type { AxiosInstance } from 'axios';
 import axios from 'axios';
-import type { Agent, AgentMessageResponse, AgentSession, AgentStatus, AgentTemplate } from '../types/agent';
+import type { Agent, AgentMessageResponse, AgentSession, AgentStatus, AgentTemplate, StartAgentSessionResponse } from '../types/agent';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -87,7 +87,7 @@ class AgentApiService {
     }
 
     // Agent Sessions
-    async startAgentSession(agentId: number, conversationId?: string): Promise<AgentSession> {
+    async startAgentSession(agentId: number, conversationId?: string): Promise<StartAgentSessionResponse> {
         console.log(conversationId);
         console.log(agentId);
         const response = await this.client.post('/agents/sessions', {

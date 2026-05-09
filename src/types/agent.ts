@@ -114,6 +114,26 @@ export interface AgentMessageResponse {
     } | null;
 }
 
+export interface StartSessionResponse {
+    session: AgentSession;
+    welcome_message?: string;
+    first_prompt?: string;
+    current_step?: string;
+    progress?: any;
+    is_completed: boolean;
+}
+
+export interface StartAgentSessionResponse {
+    session: AgentSession;
+    initial_response?: {
+        message: string;
+        current_step?: string;
+    };
+    current_step?: string;
+    progress?: any;
+    is_completed: boolean;
+}
+
 export interface AgentTemplate {
     id: string;
     name: string;

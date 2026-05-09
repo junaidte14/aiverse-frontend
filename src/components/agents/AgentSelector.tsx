@@ -10,7 +10,8 @@ interface AgentSelectorProps {
 }
 
 export const AgentSelector: React.FC<AgentSelectorProps> = ({ onSelect, selectedAgent }) => {
-    const { agents, fetchAgents, isLoading } = useAgentStore(); //
+    const { agents, fetchAgents } = useAgentStore(); //
+    
     const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {

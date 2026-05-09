@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { agentApiService } from '../services/agentApi';
 import { apiService } from '../services/api';
 import type { Agent, AgentSession } from '../types/agent';
+import type { StartAgentSessionResponse } from '../types/agent';
 
 interface AgentState {
     agents: Agent[];
@@ -9,11 +10,9 @@ interface AgentState {
     activeAgentSession: AgentSession | null;
     isLoading: boolean;
 
-    // GLOBAL LOCKS
     isInitializingAgentSession: boolean;
     activeInitializingAgentId: number | null;
 
-    // Actions
     fetchAgents: () => Promise<void>;
     setSelectedAgent: (agent: Agent | null) => void;
     setActiveAgentSession: (session: AgentSession | null) => void;
@@ -40,7 +39,6 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     activeAgentSession: null,
     isLoading: false,
 
-    // LOCK STATE
     isInitializingAgentSession: false,
     activeInitializingAgentId: null,
 
@@ -57,35 +55,30 @@ export const useAgentStore = create<AgentState>((set, get) => ({
                 selectedAgent:
                     currentSelected &&
                     data.some(a => a.id === currentSelected.id)
-                        ? data.find(
-                              a => a.id === currentSelected.id
-                          ) || null
+                        ? data.find(a => a.id === currentSelected.id) || null
                         : null,
             });
 
         } catch (error) {
             console.error('Failed to load agents:', error);
-
         } finally {
             set({ isLoading: false });
         }
     },
 
-    setSelectedAgent: (agent: Agent | null) =>
+    setSelectedAgent: (agent) =>
         set({
             selectedAgent: agent,
             activeAgentSession: null,
         }),
 
-    setActiveAgentSession: (session: AgentSession | null) =>
+    setActiveAgentSession: (session) =>
         set({
             activeAgentSession: session,
         }),
 
-    setInitializingAgentSession: (value: boolean) =>
-        set({
-            isInitializingAgentSession: value,
-        }),
+    setInitializingAgentSession: (value) =>
+        set({ isInitializingAgentSession: value }),
 
     resetAgentState: () =>
         set({
@@ -105,52 +98,31 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             userId,
         } = options || {};
 
-        // 🛑 ATOMIC GUARD (prevents race condition)
-        const canStart = get().isInitializingAgentSession;
-
+        // prevent duplicate init
         if (
-            canStart ||
+            get().isInitializingAgentSession ||
             get().activeAgentSession ||
             get().activeInitializingAgentId === agent.id
         ) {
             return;
         }
 
-        // 🔒 LOCK START (atomic update)
-        set(state => {
-            if (
-                state.isInitializingAgentSession ||
-                state.activeAgentSession
-            ) {
-                return state;
-            }
-
-            return {
-                isInitializingAgentSession: true,
-                activeInitializingAgentId: agent.id,
-            };
+        set({
+            isInitializingAgentSession: true,
+            activeInitializingAgentId: agent.id,
         });
 
         try {
-            if (!userId) {
-                throw new Error("User not found");
-            }
-
-            // 🔁 STALE CHECK
-            if (get().activeInitializingAgentId !== agent.id) return;
+            if (!userId) throw new Error("User not found");
 
             // 1. Create conversation
-            const conversation =
-                await apiService.createNewConversation(
-                    agent.name,
-                    model || "default",
-                    userId
-                );
+            const conversation = await apiService.createNewConversation(
+                agent.name,
+                model || "default",
+                userId
+            );
 
-            if (get().activeInitializingAgentId !== agent.id) return;
-
-            const conversationId = String(conversation.id);
-
+            const conversationId = conversation.id;
             setActiveConversationId?.(conversationId);
 
             upsertConversation?.({
@@ -160,30 +132,25 @@ export const useAgentStore = create<AgentState>((set, get) => ({
                 updated_at: conversation.updated_at,
             });
 
-            // 2. Start agent session
-            const session =
+            // 2. Start agent session (API RESPONSE TYPE HERE ONLY)
+            const response: StartAgentSessionResponse =
                 await agentApiService.startAgentSession(
                     agent.id,
                     conversationId
                 );
 
-            if (get().activeInitializingAgentId !== agent.id) return;
+            const { session, initial_response } = response;
 
             set({
-                activeAgentSession: session,
+                activeAgentSession: session, // ✅ FIXED (was session.id WRONG in your version)
             });
 
-            // 3. Initial message
-            const initialMessage =
-                session.welcome_message && session.first_prompt
-                    ? `${session.welcome_message}\n\n${session.first_prompt}`
-                    : session.welcome_message || session.first_prompt;
-
-            if (initialMessage) {
+            if (initial_response?.message) {
                 addMessage?.({
                     role: "assistant",
-                    content: initialMessage,
+                    content: initial_response.message,
                     timestamp: new Date(),
+                    meta: { sessionId: session.id, step: initial_response.current_step }
                 });
             }
 
@@ -197,15 +164,9 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             });
 
         } finally {
-            // 🔓 CLEAN UNLOCK (safe reset)
-            set(state => {
-                if (state.activeInitializingAgentId === agent.id) {
-                    return {
-                        isInitializingAgentSession: false,
-                        activeInitializingAgentId: null,
-                    };
-                }
-                return state;
+            set({
+                isInitializingAgentSession: false,
+                activeInitializingAgentId: null,
             });
         }
     },
