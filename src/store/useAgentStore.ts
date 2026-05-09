@@ -3,6 +3,7 @@ import { agentApiService } from '../services/agentApi';
 import { apiService } from '../services/api';
 import type { Agent, AgentSession } from '../types/agent';
 import type { StartAgentSessionResponse } from '../types/agent';
+import { useStore } from './useStore';
 
 interface AgentState {
     agents: Agent[];
@@ -98,76 +99,75 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             userId,
         } = options || {};
 
-        // prevent duplicate init
-        if (
-            get().isInitializingAgentSession ||
-            get().activeAgentSession ||
-            get().activeInitializingAgentId === agent.id
-        ) {
-            return;
+        // 1. IMPROVED GUARD: Check if this specific agent session is already active
+        const currentSession = get().activeAgentSession;
+        if (currentSession && currentSession.agent_id === agent.id) {
+            return; 
         }
 
-        set({
-            isInitializingAgentSession: true,
-            activeInitializingAgentId: agent.id,
-        });
+        set({ isInitializingAgentSession: true, activeInitializingAgentId: agent.id });
 
         try {
             if (!userId) throw new Error("User not found");
 
-            // 1. Create conversation
-            const conversation = await apiService.createNewConversation(
-                agent.name,
-                model || "default",
-                userId
+            // 2. CONTEXT CHECK: Should we reuse the current conversation?
+            // We get the current active ID from the store
+            let conversationId = useStore.getState().activeConversationId;
+            let isNewConversation = false;
+
+            // If no conversation exists, OR if the current conversation isn't the one we want, create it
+            if (!conversationId) {
+                const conversation = await apiService.createNewConversation(
+                    `Order for ${agent.name}`,
+                    model || "default",
+                    userId
+                );
+                console.log(conversation);
+                conversationId = conversation.id;
+                isNewConversation = true;
+            }
+
+            // 3. Start/Fetch Agent Session
+            const response: StartAgentSessionResponse = await agentApiService.startAgentSession(
+                agent.id,
+                conversationId ?? undefined
             );
 
-            const conversationId = conversation.id;
-            setActiveConversationId?.(conversationId);
+            const { welcome_message } = response;
 
+            // 4. PERSISTENCE: Explicitly update the Sidebar
+            // We call upsertConversation with the latest data to ensure the sidebar reflects it
             upsertConversation?.({
                 id: conversationId,
-                title: conversation.title,
-                model_name: conversation.model_name,
-                updated_at: conversation.updated_at,
+                title: `Order: ${agent.name}`,
+                model_name: model || "default",
+                last_message: welcome_message, // Preview for sidebar
+                updated_at: new Date().toISOString(), // Forces the sort to the top
             });
 
-            // 2. Start agent session (API RESPONSE TYPE HERE ONLY)
-            const response: StartAgentSessionResponse =
-                await agentApiService.startAgentSession(
-                    agent.id,
-                    conversationId
-                );
+            console.log(conversationId);
+            // Set state
+            if(conversationId){
+                setActiveConversationId?.(conversationId);
+            }
+            set({ activeAgentSession: response as unknown as AgentSession });
 
-            const { session, initial_response } = response;
-
-            set({
-                activeAgentSession: session, // ✅ FIXED (was session.id WRONG in your version)
-            });
-
-            if (initial_response?.message) {
+            // 5. Only add messages if it's a fresh initialization for this conversation
+            if (welcome_message) {
                 addMessage?.({
+                    id: crypto.randomUUID(),
                     role: "assistant",
-                    content: initial_response.message,
+                    content: welcome_message,
                     timestamp: new Date(),
-                    meta: { sessionId: session.id, step: initial_response.current_step }
                 });
             }
 
         } catch (err) {
             console.error("initializeAgentSession failed:", err);
-
             setError?.("Failed to initialize agent workflow");
-
-            set({
-                activeAgentSession: null,
-            });
-
+            set({ activeAgentSession: null });
         } finally {
-            set({
-                isInitializingAgentSession: false,
-                activeInitializingAgentId: null,
-            });
+            set({ isInitializingAgentSession: false, activeInitializingAgentId: null });
         }
     },
 }));

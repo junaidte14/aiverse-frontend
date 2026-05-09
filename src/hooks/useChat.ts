@@ -42,11 +42,16 @@ export const useChat = (): UseChatReturn => {
     const isMounted = useRef(true);
     
     const {
-        selectedAgent,
         initializeAgentSession,
-        activeAgentSession,
         setActiveAgentSession,
     } = useAgentStore();
+
+    const selectedAgent = useAgentStore((state) => state.selectedAgent);
+    const activeAgentSession = useAgentStore((state) => state.activeAgentSession);
+
+    // Debug logging inside the component body (will run on every render)
+    console.log("Current Agent:", selectedAgent?.id);
+    console.log("Current Session:", activeAgentSession?.id);
 
     useEffect(() => {
         return () => {
@@ -339,8 +344,11 @@ export const useChat = (): UseChatReturn => {
                 return useStore.getState().messages;
             };
 
+            const currentSession = useAgentStore.getState().activeAgentSession;
+            const currentAgent = useAgentStore.getState().selectedAgent;
+
             try {
-                if (selectedAgent && activeAgentSession) {
+                if (currentAgent && currentSession) {
                     await sendMessageAgent(content.trim());
                 } else if (selectedCollection) {
                     // RAG mode

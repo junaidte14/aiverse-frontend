@@ -124,7 +124,10 @@ export interface StartSessionResponse {
 }
 
 export interface StartAgentSessionResponse {
+    id: number;
     session: AgentSession;
+    welcome_message?: string;
+    first_prompt?: string;
     initial_response?: {
         message: string;
         current_step?: string;

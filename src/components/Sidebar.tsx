@@ -42,7 +42,9 @@ export const Sidebar: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        fetchConversations();
+        if (conversations.length === 0) {
+            fetchConversations();
+        }
     }, []);
 
     useEffect(() => {
