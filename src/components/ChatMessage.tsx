@@ -181,7 +181,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = React.memo(({ message }) 
                     )}
                 </div>
 
-                <div className={`text-[10px] mt-2 opacity-50 ${isUser ? 'text-white/70 text-right' : 'text-gray-500 dark:text-gray-400 text-left'}`}>
+                <div className={`text-[10px] mt-2 opacity-50 ${isUser ? 'text-gray-500 dark:text-gray-400 text-right' : 'text-gray-500 dark:text-gray-400 text-left'}`}>
                     {message.timestamp instanceof Date
                         ? message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : ''}

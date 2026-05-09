@@ -117,19 +117,32 @@ export const useAgentStore = create<AgentState>((set, get) => ({
             const { welcome_message, conversation_id } = response;
 
             // 4. PERSISTENCE: Explicitly update the Sidebar
-            // We call upsertConversation with the latest data to ensure the sidebar reflects it
-            upsertConversation?.({
+            const newConversation = {
                 id: conversation_id,
                 title: `Order: ${agent.name}`,
                 model_name: model || "default",
-                last_message: welcome_message, // Preview for sidebar
-                updated_at: new Date().toISOString(), // Forces the sort to the top
+                last_message: welcome_message,
+                updated_at: new Date().toISOString(),
+            };
+
+            upsertConversation?.(newConversation);
+
+            // IMPORTANT:
+            // activate newly created conversation immediately
+            setActiveConversationId?.(String(conversation_id));
+
+            // inject welcome message directly into active chat
+            options?.addMessage?.({
+                id: crypto.randomUUID(),
+                role: "assistant",
+                content: welcome_message,
+                timestamp: new Date(),
+                conversation_id,
             });
 
-            console.log(conversation_id);
-            setActiveConversationId?.(String(conversation_id));
-            // Set state
-            set({ activeAgentSession: response as unknown as AgentSession });
+            set({
+                activeAgentSession: response as unknown as AgentSession,
+            });
 
         } catch (err) {
             console.error("initializeAgentSession failed:", err);
