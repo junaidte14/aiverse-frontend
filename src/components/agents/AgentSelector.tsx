@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useAgentStore } from '../../store/useAgentStore'; //
 import { type Agent } from '../../types/agent';
 import { Bot, ChevronDown, Check } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 interface AgentSelectorProps {
     onSelect: (agent: Agent | null) => void;
@@ -11,8 +12,27 @@ interface AgentSelectorProps {
 
 export const AgentSelector: React.FC<AgentSelectorProps> = ({ onSelect, selectedAgent }) => {
     const { agents, fetchAgents } = useAgentStore(); //
-    
     const [showDropdown, setShowDropdown] = useState(false);
+
+    const handleSelect = (agent: Agent | null) => {
+        setShowDropdown(false);
+
+        // pass selection upward (existing system handles session)
+        onSelect(agent);
+
+        // show welcome message immediately in UI layer
+        if (agent?.welcome_message) {
+            // we inject a temporary assistant message via parent state (chat store)
+            const addMessage = useStore.getState().addMessage;
+
+            addMessage({
+                id: crypto.randomUUID(),
+                role: 'assistant',
+                content: agent.welcome_message,
+                timestamp: new Date(),
+            });
+        }
+    };
 
     useEffect(() => {
         if (agents.length === 0) fetchAgents(); //
@@ -44,7 +64,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({ onSelect, selected
                         </div>
                         
                         <button
-                            onClick={() => { onSelect(null); setShowDropdown(false); }}
+                            onClick={() => handleSelect(null)}
                             className="w-full px-3 py-2 text-left hover:bg-gray-50 text-sm flex items-center justify-between"
                         >
                             <span>Standard Chat</span>
@@ -55,7 +75,7 @@ export const AgentSelector: React.FC<AgentSelectorProps> = ({ onSelect, selected
                             {agents.map((agent) => (
                                 <button
                                     key={agent.id}
-                                    onClick={() => { onSelect(agent); setShowDropdown(false); }}
+                                    onClick={() => handleSelect(agent)}
                                     className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between ${
                                         selectedAgent?.id === agent.id ? 'bg-purple-50' : ''
                                     }`}

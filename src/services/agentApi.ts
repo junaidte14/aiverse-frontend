@@ -87,7 +87,7 @@ class AgentApiService {
     }
 
     // Agent Sessions
-    async startAgentSession(agentId: number, conversationId?: string): Promise<StartAgentSessionResponse> {
+    async startAgentSession(agentId: number, conversationId?: string | null): Promise<StartAgentSessionResponse> {
         console.log(conversationId);
         const response = await this.client.post('/agents/sessions', {
             agent_id: agentId,

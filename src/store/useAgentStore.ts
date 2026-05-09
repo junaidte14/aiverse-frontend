@@ -1,9 +1,7 @@
 import { create } from 'zustand';
 import { agentApiService } from '../services/agentApi';
-import { apiService } from '../services/api';
 import type { Agent, AgentSession } from '../types/agent';
 import type { StartAgentSessionResponse } from '../types/agent';
-import { useStore } from './useStore';
 
 interface AgentState {
     agents: Agent[];
@@ -48,7 +46,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
         try {
             const data = await agentApiService.listAgents();
-
+            console.log(data);
             const currentSelected = get().selectedAgent;
 
             set({
@@ -93,7 +91,6 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         const {
             setActiveConversationId,
             upsertConversation,
-            addMessage,
             setError,
             model,
             userId,
@@ -110,57 +107,29 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         try {
             if (!userId) throw new Error("User not found");
 
-            // 2. CONTEXT CHECK: Should we reuse the current conversation?
-            // We get the current active ID from the store
-            let conversationId = useStore.getState().activeConversationId;
-            let isNewConversation = false;
-
-            // If no conversation exists, OR if the current conversation isn't the one we want, create it
-            if (!conversationId) {
-                const conversation = await apiService.createNewConversation(
-                    `Order for ${agent.name}`,
-                    model || "default",
-                    userId
-                );
-                console.log(conversation);
-                conversationId = conversation.id;
-                isNewConversation = true;
-            }
 
             // 3. Start/Fetch Agent Session
             const response: StartAgentSessionResponse = await agentApiService.startAgentSession(
                 agent.id,
-                conversationId ?? undefined
+                undefined
             );
 
-            const { welcome_message } = response;
+            const { welcome_message, conversation_id } = response;
 
             // 4. PERSISTENCE: Explicitly update the Sidebar
             // We call upsertConversation with the latest data to ensure the sidebar reflects it
             upsertConversation?.({
-                id: conversationId,
+                id: conversation_id,
                 title: `Order: ${agent.name}`,
                 model_name: model || "default",
                 last_message: welcome_message, // Preview for sidebar
                 updated_at: new Date().toISOString(), // Forces the sort to the top
             });
 
-            console.log(conversationId);
+            console.log(conversation_id);
+            setActiveConversationId?.(String(conversation_id));
             // Set state
-            if(conversationId){
-                setActiveConversationId?.(conversationId);
-            }
             set({ activeAgentSession: response as unknown as AgentSession });
-
-            // 5. Only add messages if it's a fresh initialization for this conversation
-            if (welcome_message) {
-                addMessage?.({
-                    id: crypto.randomUUID(),
-                    role: "assistant",
-                    content: welcome_message,
-                    timestamp: new Date(),
-                });
-            }
 
         } catch (err) {
             console.error("initializeAgentSession failed:", err);

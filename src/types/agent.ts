@@ -81,7 +81,7 @@ export interface Agent {
 export interface AgentSession {
     id: number;
     agent_id: number;
-    conversation_id?: string;
+    conversation_id?: string | null;
     status: SessionStatus;
     current_step?: string;
     collected_data: Record<string, any>;
@@ -126,12 +126,9 @@ export interface StartSessionResponse {
 export interface StartAgentSessionResponse {
     id: number;
     session: AgentSession;
+    conversation_id?: number;
     welcome_message?: string;
     first_prompt?: string;
-    initial_response?: {
-        message: string;
-        current_step?: string;
-    };
     current_step?: string;
     progress?: any;
     is_completed: boolean;

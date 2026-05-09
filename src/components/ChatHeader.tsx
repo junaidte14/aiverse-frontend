@@ -20,19 +20,26 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        checkConnection();
-        // Optional: Check every 240 seconds
-        const interval = setInterval(checkConnection, 240000);
-        return () => clearInterval(interval);
-    }, []);
-
     const checkConnection = async () => {
         try {
             await apiService.listProviders();
         } catch (error) {
         }
     };
+
+    useEffect(() => {
+        let mounted = true;
+        const safeCheck = async () => {
+            if (!mounted) return;
+            await checkConnection();
+        };
+        safeCheck();
+        const interval = setInterval(safeCheck, 1800000); //30 minutes
+        return () => {
+            mounted = false;
+            clearInterval(interval);
+        };
+    }, [checkConnection]);
 
     return (
         <div className="px-6 py-4 shadow-lg bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
