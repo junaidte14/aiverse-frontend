@@ -48,10 +48,7 @@ export const useChat = (): UseChatReturn => {
 
     const selectedAgent = useAgentStore((state) => state.selectedAgent);
     const activeAgentSession = useAgentStore((state) => state.activeAgentSession);
-
-    // Debug logging inside the component body (will run on every render)
-    console.log("Current Agent:", selectedAgent?.id);
-    console.log("Current Session:", activeAgentSession?.id);
+    const initializedAgentRef = useRef<number | null>(null);
 
     useEffect(() => {
         return () => {
@@ -66,6 +63,10 @@ export const useChat = (): UseChatReturn => {
 
     useEffect(() => {
         if (!selectedAgent) return;
+        if (initializedAgentRef.current === selectedAgent.id) {
+            return; // already initialized
+        }
+        initializedAgentRef.current = selectedAgent.id;
         const user = useStore.getState().user;
         initializeAgentSession(selectedAgent, {
             userId: user?.id,
