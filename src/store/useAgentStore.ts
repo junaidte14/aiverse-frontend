@@ -46,7 +46,6 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
         try {
             const data = await agentApiService.listAgents();
-            console.log(data);
             const currentSelected = get().selectedAgent;
 
             set({

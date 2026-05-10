@@ -18,7 +18,6 @@ export interface UseChatReturn {
     error: string | null;
     conversationId: string | null;
     sendMessage: (content: string) => Promise<void>;
-    clearMessages: () => void;
     settings: ChatSettings;
     updateSettings: (settings: Partial<ChatSettings>) => void;
 }
@@ -31,7 +30,6 @@ export const useChat = (): UseChatReturn => {
         activeConversationId: conversationId,
         setActiveConversationId,
         messages,
-        setMessages,
         addMessage,
         updateMessage,
     } = useStore();
@@ -55,11 +53,6 @@ export const useChat = (): UseChatReturn => {
             isMounted.current = false;
         };
     }, []);
-
-    const clearMessages = useCallback(() => {
-        setMessages([]);
-        setError(null);
-    }, [setMessages]);
 
     useEffect(() => {
         if (!selectedAgent) return;
@@ -390,7 +383,6 @@ export const useChat = (): UseChatReturn => {
         error,
         conversationId,
         sendMessage,
-        clearMessages,
         settings,
         updateSettings,
     };

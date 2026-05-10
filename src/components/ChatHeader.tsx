@@ -1,8 +1,7 @@
 // src/components/ChatHeader.tsx
 import { ChevronDown, Home, Layout, LogOut, Shield, User as UserIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiService } from '../services/api';
 import { useStore } from '../store/useStore';
 
 interface ChatHeaderProps {
@@ -19,27 +18,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const navigate = useNavigate();
-
-    const checkConnection = async () => {
-        try {
-            await apiService.listProviders();
-        } catch (error) {
-        }
-    };
-
-    useEffect(() => {
-        let mounted = true;
-        const safeCheck = async () => {
-            if (!mounted) return;
-            await checkConnection();
-        };
-        safeCheck();
-        const interval = setInterval(safeCheck, 1800000); //30 minutes
-        return () => {
-            mounted = false;
-            clearInterval(interval);
-        };
-    }, [checkConnection]);
 
     return (
         <div className="px-6 py-4 shadow-lg bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 transition-colors duration-300">
@@ -97,6 +75,16 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                                 >
                                     <div className="w-2 h-2 rounded-full bg-purple-500" />
                                     Versana
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigate('/demos?collection=weebly-apps');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Weebly Apps
                                 </button>
                             </div>
                         )}

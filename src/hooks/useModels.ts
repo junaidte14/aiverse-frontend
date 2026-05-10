@@ -24,6 +24,7 @@ export const useModels = (): UseModelsReturn => {
 
         try {
             const data = await apiService.getModels();
+            console.log(data);
             setModels(data);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to load models';
