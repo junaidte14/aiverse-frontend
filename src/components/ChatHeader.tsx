@@ -25,6 +25,10 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 <div>
                     <h1 className="text-2xl font-bold flex items-center gap-2 text-gray-800 dark:text-white">
                         iVersana
+
+                        <span className="text-[9px] font-medium text-gray-400 dark:text-gray-500 mt-3">
+                            v1.5.0
+                        </span>
                     </h1>
                 </div>
 
