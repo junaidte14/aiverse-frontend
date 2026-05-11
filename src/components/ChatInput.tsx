@@ -2,11 +2,12 @@
  * Chat input component with send button
  */
 
-import { Check, ChevronUp, Cpu, Database, Plus, Send } from 'lucide-react';
+import { Bot, Check, ChevronUp, Cpu, Database, Plus, Send } from 'lucide-react';
 import React, { type KeyboardEvent, useEffect, useRef, useState } from 'react';
 import { useRagStore } from '../store/useRagStore';
 import { useStore } from '../store/useStore';
 import { ProviderSelector } from './ProviderSelector';
+import { useAgentStore } from '../store/useAgentStore';
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -25,6 +26,15 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const { settings, updateSettings } = useStore();
     const [showRagPicker, setShowRagPicker] = useState(false);
     const { collections, selectedCollection, setSelectedCollection, fetchCollections } = useRagStore();
+    const { selectedAgent, setSelectedAgent } = useAgentStore();
+    const agents = useAgentStore((state) => state.agents);
+    const fetchAgents = useAgentStore((state) => state.fetchAgents);
+
+    useEffect(() => {
+        if (agents.length === 0) {
+            fetchAgents();
+        }
+    }, [agents.length, fetchAgents]);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -48,11 +58,6 @@ export const ChatInput: React.FC<ChatInputProps> = ({
         }
     };
 
-    const toggleRagPicker = () => {
-        if (!showRagPicker && collections.length === 0) fetchCollections();
-        setShowRagPicker(!showRagPicker);
-    };
-
     return (
         <div className="px-4 bg-gradient-to-t from-background via-background to-transparent">
             <div className="border rounded-xl bg-card shadow-lg focus-within:ring-2 focus-within:ring-primary/20 transition-all">
@@ -73,56 +78,131 @@ export const ChatInput: React.FC<ChatInputProps> = ({
                 <div className="flex items-center justify-between px-4 py-1 border-t bg-muted/30">
 
                     <div className="flex items-center gap-1 relative">
-                        {/* Collection Popover */}
+                        {/* Main Unified Dropdown Trigger */}
+                        <button
+                            onClick={() => {
+                                if (collections.length === 0) {
+                                    fetchCollections();
+                                }
+
+                                setShowRagPicker(!showRagPicker);
+                            }}
+                            className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-primary-500 transition-all"
+                        >
+                            <Plus className={`w-4 h-4 transition-transform ${showRagPicker ? 'rotate-45' : ''}`} />
+
+                            <span className="max-w-[120px] truncate">
+                                {selectedAgent
+                                    ? selectedAgent.name
+                                    : selectedCollection
+                                        ? selectedCollection
+                                        : 'Workspace'}
+                            </span>
+                        </button>
+
+                        {/* Unified Dropdown */}
                         {showRagPicker && (
                             <>
-                                <div className="fixed inset-0 z-10" onClick={() => setShowRagPicker(false)} />
-                                <div className="absolute bottom-full left-0 mb-1 w-64 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl z-20 p-1 animate-in fade-in zoom-in-95">
-                                    <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-800 mb-1">
-                                        <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">RAG Knowledge Base</span>
+                                <div
+                                    className="fixed inset-0 z-10"
+                                    onClick={() => setShowRagPicker(false)}
+                                />
+
+                                <div className="absolute bottom-full left-0 mb-2 w-72 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl shadow-2xl z-20 overflow-hidden animate-in fade-in zoom-in-95">
+
+                                    {/* STANDARD CHAT */}
+                                    <button
+                                        onClick={() => {
+                                            setSelectedCollection(null);
+                                            setSelectedAgent(null);
+                                            setShowRagPicker(false);
+                                        }}
+                                        className={`w-full flex items-center justify-between px-4 py-3 text-sm transition-colors`}
+                                    >
+                                        <span>Standard Chat</span>
+
+                                        {!selectedCollection && !selectedAgent && (
+                                            <Check className="w-4 h-4" />
+                                        )}
+                                    </button>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200 dark:border-gray-800" />
+
+                                    {/* RAG SECTION */}
+                                    <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                        RAG Collections
                                     </div>
 
-                                    <div className="max-h-48 overflow-y-auto">
-                                        <button
-                                            onClick={() => { setSelectedCollection(null); setShowRagPicker(false); }}
-                                            className={`w-full text-left px-3 py-2 rounded-lg text-sm mb-1 ${!selectedCollection ? 'bg-primary-50 text-primary-600' : 'hover:bg-gray-100 text-gray-700'}`}
-                                        >
-                                            None (Standard Chat)
-                                        </button>
-
+                                    <div className="max-h-40 overflow-y-auto">
                                         {collections.map((name) => (
                                             <button
                                                 key={name}
                                                 onClick={() => {
                                                     setSelectedCollection(name);
+                                                    setSelectedAgent(null);
                                                     setShowRagPicker(false);
                                                 }}
-                                                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors ${selectedCollection === name
-                                                    ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-600'
-                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'
-                                                    }`}
+                                                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors`}
                                             >
-                                                <span className="truncate">{name}</span>
-                                                {selectedCollection === name && <Check className="w-3.5 h-3.5" />}
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                    <Database className="w-4 h-4 shrink-0" />
+
+                                                    <span className="truncate">
+                                                        {name}
+                                                    </span>
+                                                </div>
+
+                                                {selectedCollection === name && (
+                                                    <Check className="w-4 h-4" />
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Divider */}
+                                    <div className="border-t border-gray-200 dark:border-gray-800 mt-1" />
+
+                                    {/* AGENTS SECTION */}
+                                    <div className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                        Agents
+                                    </div>
+
+                                    <div className="max-h-48 overflow-y-auto">
+                                        {agents.map((agent:any) => (
+                                            <button
+                                                key={agent.id}
+                                                onClick={() => {
+                                                    setSelectedAgent(agent);
+                                                    setSelectedCollection(null);
+                                                    setShowRagPicker(false);
+                                                }}
+                                                className={`w-full flex items-center justify-between px-4 py-2 text-sm transition-colors`}
+                                            >
+                                                <div className="flex items-start gap-2 min-w-0">
+                                                    <Bot className="w-4 h-4 mt-0.5 shrink-0" />
+
+                                                    <div className="flex flex-col min-w-0 text-left">
+                                                        <span className="truncate font-medium">
+                                                            {agent.name}
+                                                        </span>
+
+                                                        {agent.description && (
+                                                            <span className="text-[10px] opacity-70 truncate">
+                                                                {agent.description}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {selectedAgent?.id === agent.id && (
+                                                    <Check className="w-4 h-4 shrink-0" />
+                                                )}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                             </>
-                        )}
-
-                        <button
-                            onClick={toggleRagPicker}
-                            className={`p-2 rounded-lg transition-colors ${selectedCollection ? 'text-primary-500 bg-primary-50' : 'text-gray-500 hover:bg-gray-200'}`}
-                        >
-                            <Plus className={`w-5 h-5 transition-transform ${showRagPicker ? 'rotate-45' : ''}`} />
-                        </button>
-
-                        {selectedCollection && (
-                            <div className="flex items-center gap-2 px-2 py-1 text-xs font-medium text-primary-600 bg-primary-50 dark:bg-primary-900/20 rounded-md">
-                                <Database className="w-3.5 h-3.5" />
-                                <span className="max-w-[100px] truncate">{selectedCollection}</span>
-                            </div>
                         )}
                     </div>
 

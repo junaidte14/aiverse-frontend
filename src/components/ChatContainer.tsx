@@ -3,9 +3,8 @@
  */
 
 import { AlertCircle } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useChat } from '../hooks/useChat';
-import { apiService } from '../services/api';
 import { ChatHeader } from './ChatHeader';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
@@ -23,21 +22,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
     const { messages, isLoading, error, sendMessage } =
         useChat();
     const [showError, setShowError] = useState(true);
-    const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('connecting');
     const isStreaming = messages.some(m => m.isStreaming);
-
-    useEffect(() => {
-        checkConnection();
-    }, []);
-
-    const checkConnection = async () => {
-        try {
-            await apiService.listProviders();
-            setConnectionStatus('connected');
-        } catch (error) {
-            setConnectionStatus('disconnected');
-        }
-    };
 
     return (
         <div className="h-screen flex items-center justify-center">
@@ -74,11 +59,9 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
                 {/* Input */}
                 <ChatInput
                     onSend={sendMessage}
-                    disabled={isStreaming || connectionStatus === 'disconnected'}
+                    disabled={isStreaming}
                     placeholder={
-                        connectionStatus === 'disconnected'
-                            ? 'Cannot connect to server...'
-                            : isStreaming
+                        isStreaming
                                 ? 'Waiting for response...'
                                 : 'Type your message...'
                     }

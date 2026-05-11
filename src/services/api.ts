@@ -300,6 +300,20 @@ class ApiService {
         return response.data;
     }
 
+    async createNewConversation(
+        title: string,
+        modelName: string,
+        userId: number
+    ) {
+        const response = await this.client.post('/conversations', {
+            title,
+            model_name: modelName,
+            user_id: userId,
+        });
+
+        return response.data;
+    }
+
     async updateConversation(conversationId: string, title: string): Promise<Conversation> {
         const response = await this.client.put(`/conversations/${conversationId}`, null, {
             params: { title }
