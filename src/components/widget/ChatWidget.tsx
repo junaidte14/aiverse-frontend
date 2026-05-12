@@ -17,9 +17,11 @@ import { useRagStore } from '../../store/useRagStore';
 import { useStore } from '../../store/useStore';
 import { Login } from '../Login'; // Ensure these are imported
 import { Register } from '../Register';
+import { useAgentStore } from '../../store/useAgentStore';
 
 interface ChatWidgetProps {
     collection?: string;
+    agentId?: number;
     provider?: string;
     model?: string;
     guestAllowed?: string;
@@ -35,6 +37,7 @@ interface ChatWidgetProps {
 
 export const ChatWidget: React.FC<ChatWidgetProps> = ({
     collection = '',
+    agentId = 0,
     provider = 'groq',
     model = 'llama-3.3-70b-versatile',
     guestAllowed = 'true',
@@ -63,15 +66,65 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     useEffect(() => {
         updateSettings({
-            provider: provider,
-            model: model,
+            provider,
+            model,
             guest_allowed: guestAllowed
         });
 
-        if (collection) {
-            useRagStore.getState().setSelectedCollection(collection);
-        }
-    }, [provider, model, collection, updateSettings, guestAllowed]);
+        const initializeWidgetMode = async () => {
+            try {
+                // =========================================
+                // PRIORITY 1: AGENT MODE
+                // =========================================
+                if (agentId) {
+                    const agentStore = useAgentStore.getState();
+
+                    // load agents if not loaded
+                    if (agentStore.agents.length === 0) {
+                        await agentStore.fetchAgents();
+                    }
+
+                    const agent = agentStore.agents.find(
+                        (a: any) => a.id === agentId
+                    );
+
+                    if (agent) {
+                        // clear RAG mode
+                        useRagStore.getState().setSelectedCollection(null);
+
+                        // activate agent
+                        agentStore.setSelectedAgent(agent);
+                    }
+
+                    return;
+                }
+
+                // =========================================
+                // PRIORITY 2: RAG MODE
+                // =========================================
+                if (collection) {
+                    useAgentStore.getState().setSelectedAgent(null);
+
+                    useRagStore
+                        .getState()
+                        .setSelectedCollection(collection);
+                }
+
+            } catch (error) {
+                console.error('Failed to initialize widget mode:', error);
+            }
+        };
+
+        initializeWidgetMode();
+
+    }, [
+        provider,
+        model,
+        collection,
+        agentId,
+        updateSettings,
+        guestAllowed
+    ]);
 
     useEffect(() => {
         // Determine dimensions based on state
