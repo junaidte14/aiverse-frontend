@@ -9,6 +9,9 @@ export const DocsPage: React.FC = () => {
     // Parse configuration once on mount
     const [config] = useState({
         collection: searchParams.get('collection') || '',
+        agentId: searchParams.get('agentId')
+        ? Number(searchParams.get('agentId'))
+        : undefined,
         provider: searchParams.get('provider') || 'groq',
         model: searchParams.get('model') || 'llama-3.3-70b-versatile',
         guestAllowed: searchParams.get('guestAllowed') || 'false',

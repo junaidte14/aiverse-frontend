@@ -90,6 +90,47 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                                     <div className="w-2 h-2 rounded-full bg-purple-500" />
                                     Weebly Apps
                                 </button>
+                                <hr></hr>
+                                <button
+                                    onClick={() => {
+                                        navigate('/demos?agentId=4');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Order Taking Agent
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigate('/demos?agentId=5');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Appointment Booking Agent
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigate('/demos?agentId=6');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Support Ticket Agent
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        navigate('/demos?agentId=7');
+                                        setIsDropdownOpen(false);
+                                    }}
+                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors flex items-center gap-2"
+                                >
+                                    <div className="w-2 h-2 rounded-full bg-purple-500" />
+                                    Lead Qualification Agent
+                                </button>
                             </div>
                         )}
                     </div>

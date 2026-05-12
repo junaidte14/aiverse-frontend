@@ -1,4 +1,5 @@
 import {
+    Bot,
     ChevronDown,
     Database,
     FileText,
@@ -63,6 +64,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
     const { isAuthenticated, setUser } = useStore();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [showSources, setShowSources] = useState(false);
+    const {agents, selectedAgent} = useAgentStore();
 
     useEffect(() => {
         updateSettings({
@@ -77,23 +79,18 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
                 // PRIORITY 1: AGENT MODE
                 // =========================================
                 if (agentId) {
-                    const agentStore = useAgentStore.getState();
-
                     // load agents if not loaded
-                    if (agentStore.agents.length === 0) {
-                        await agentStore.fetchAgents();
+                    if (useAgentStore.getState().agents.length === 0) {
+                        await useAgentStore.getState().fetchAgents();
                     }
-
-                    const agent = agentStore.agents.find(
+                    const agent = agents.find(
                         (a: any) => a.id === agentId
                     );
-
                     if (agent) {
                         // clear RAG mode
                         useRagStore.getState().setSelectedCollection(null);
-
                         // activate agent
-                        agentStore.setSelectedAgent(agent);
+                        useAgentStore.getState().setSelectedAgent(agent);
                     }
 
                     return;
@@ -116,7 +113,7 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
         };
 
         initializeWidgetMode();
-
+        console.log(selectedAgent);
     }, [
         provider,
         model,
@@ -381,8 +378,25 @@ export const ChatWidget: React.FC<ChatWidgetProps> = ({
 
                                 <div className="mt-3 flex items-center justify-between text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                                     <div className="flex items-center gap-1.5">
-                                        {collection && <Database size={10} />}
-                                        {collection ? `KB: ${collection}` : settings.model}
+                                        {selectedAgent ? (
+                                            <>
+                                                <Bot size={10} />
+                                                <span className="truncate max-w-[140px]">
+                                                    Agent: {selectedAgent.name}
+                                                </span>
+                                            </>
+                                        ) : collection ? (
+                                            <>
+                                                <Database size={10} />
+                                                <span className="truncate max-w-[140px]">
+                                                    KB: {collection}
+                                                </span>
+                                            </>
+                                        ) : (
+                                            <span className="truncate max-w-[140px]">
+                                                {settings.model}
+                                            </span>
+                                        )}
                                     </div>
                                     {conversationId && <span>#{conversationId}</span>}
                                 </div>
