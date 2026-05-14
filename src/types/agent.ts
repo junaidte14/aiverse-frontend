@@ -100,7 +100,7 @@ export interface AgentMessageRequest {
 
 export interface AgentMessageResponse {
     message: string;
-    current_step?: string | null;
+    current_step?: AgentStep;
     step_prompt?: string | null;
     is_completed: boolean;
     collected_data?: Record<string, any> | null;
@@ -129,7 +129,7 @@ export interface StartAgentSessionResponse {
     conversation_id?: number;
     welcome_message?: string;
     first_prompt?: string;
-    current_step?: string;
+    current_step?: AgentStep;
     progress?: any;
     is_completed: boolean;
 }

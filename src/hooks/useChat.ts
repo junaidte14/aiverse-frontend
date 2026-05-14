@@ -287,10 +287,15 @@ export const useChat = (): UseChatReturn => {
                     isStreaming: false,
                 });
 
+                if (response.current_step) {
+                    useAgentStore.getState().setCurrentStep(response.current_step);
+                }
+
                 if (response.is_completed) {
                     setActiveAgentSession(null);
                     useAgentStore.getState().setSelectedAgent(null);
-
+                    useAgentStore.getState().setCurrentStep(null);
+                    
                     addMessage({
                         role: 'assistant',
                         content:

@@ -7,6 +7,8 @@ interface AgentState {
     agents: Agent[];
     selectedAgent: Agent | null;
     activeAgentSession: AgentSession | null;
+    currentStep: any | null;
+    setCurrentStep: (step: any | null) => void;
     isLoading: boolean;
 
     isInitializingAgentSession: boolean;
@@ -36,6 +38,8 @@ export const useAgentStore = create<AgentState>((set, get) => ({
     agents: [],
     selectedAgent: null,
     activeAgentSession: null,
+    currentStep: null,
+    setCurrentStep: (step) => set({ currentStep: step }),
     isLoading: false,
 
     isInitializingAgentSession: false,
@@ -68,6 +72,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         set({
             selectedAgent: agent,
             activeAgentSession: null,
+            currentStep: null,
         }),
 
     setActiveAgentSession: (session) =>
@@ -82,6 +87,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
         set({
             selectedAgent: null,
             activeAgentSession: null,
+            currentStep: null,
             isInitializingAgentSession: false,
             activeInitializingAgentId: null,
         }),
@@ -113,7 +119,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
                 undefined
             );
 
-            const { welcome_message, conversation_id } = response;
+            const { welcome_message, conversation_id, current_step } = response;
 
             // 4. PERSISTENCE: Explicitly update the Sidebar
             const newConversation = {
@@ -141,6 +147,7 @@ export const useAgentStore = create<AgentState>((set, get) => ({
 
             set({
                 activeAgentSession: response as unknown as AgentSession,
+                currentStep: current_step || null,
             });
 
         } catch (err) {

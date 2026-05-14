@@ -8,6 +8,7 @@ import { useRagStore } from '../store/useRagStore';
 import { useStore } from '../store/useStore';
 import { ProviderSelector } from './ProviderSelector';
 import { useAgentStore } from '../store/useAgentStore';
+import { AgentSelectInput } from './agents/AgentSelectInput';
 
 interface ChatInputProps {
     onSend: (message: string) => void;
@@ -29,6 +30,16 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     const { selectedAgent, setSelectedAgent } = useAgentStore();
     const agents = useAgentStore((state) => state.agents);
     const fetchAgents = useAgentStore((state) => state.fetchAgents);
+
+    const currentStep = useAgentStore((state) => state.currentStep);
+    const activeAgentSession = useAgentStore((state) => state.activeAgentSession);
+    const isSelectField = currentStep?.field_type === 'select';
+    const selectOptions = currentStep?.validation?.options || [];
+
+    const handleSelectOption = (option: string) => {
+        // When user selects an option, send it as a message
+        onSend(option);
+    };
 
     useEffect(() => {
         if (agents.length === 0) {
@@ -61,18 +72,25 @@ export const ChatInput: React.FC<ChatInputProps> = ({
     return (
         <div className="px-4 bg-gradient-to-t from-background via-background to-transparent">
             <div className="border rounded-xl bg-card shadow-lg focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-
-                {/* Textarea Area */}
-                <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder={placeholder}
-                    onKeyDown={handleKeyDown}
-                    disabled={disabled}
-                    rows={1}
-                    className="w-full p-4 bg-transparent resize-none outline-none border-none custom-scrollbar overflow-y-auto"
-                />
+                {/* Show SELECT options when active agent has SELECT field */}
+                {activeAgentSession && isSelectField && selectOptions.length > 0 ? (
+                    <AgentSelectInput
+                        options={selectOptions}
+                        onSelect={handleSelectOption}
+                        disabled={disabled}
+                    />
+                ) : (
+                    <textarea
+                        ref={textareaRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        placeholder={placeholder}
+                        onKeyDown={handleKeyDown}
+                        disabled={disabled}
+                        rows={1}
+                        className="w-full p-4 bg-transparent resize-none outline-none border-none custom-scrollbar overflow-y-auto"
+                    />
+                )}
 
                 {/* Bottom Action Bar */}
                 <div className="flex items-center justify-between px-4 py-1 border-t bg-muted/30">
