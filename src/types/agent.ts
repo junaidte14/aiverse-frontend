@@ -133,10 +133,3 @@ export interface StartAgentSessionResponse {
     progress?: any;
     is_completed: boolean;
 }
-
-export interface AgentTemplate {
-    id: string;
-    name: string;
-    description: string;
-    template: Partial<Agent>;
-}

@@ -4,7 +4,7 @@
 
 import type { AxiosInstance } from 'axios';
 import axios from 'axios';
-import type { Agent, AgentMessageResponse, AgentSession, AgentStatus, AgentTemplate, StartAgentSessionResponse } from '../types/agent';
+import type { Agent, AgentMessageResponse, AgentSession, AgentStatus, StartAgentSessionResponse } from '../types/agent';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 
@@ -54,13 +54,6 @@ class AgentApiService {
         localStorage.removeItem('access_token');
     }
 
-    // ==================== AGENTS ====================
-
-    async createAgent(agentData: Partial<Agent>): Promise<Agent> {
-        const response = await this.client.post('/agents', agentData);
-        return response.data;
-    }
-
     async listAgents(status?: AgentStatus): Promise<Agent[]> {
         const params = status ? { status } : {};
         const response = await this.client.get('/agents', { params });
@@ -69,20 +62,6 @@ class AgentApiService {
 
     async getAgent(agentId: number): Promise<Agent> {
         const response = await this.client.get(`/agents/${agentId}`);
-        return response.data;
-    }
-
-    async updateAgent(agentId: number, agentData: Partial<Agent>): Promise<Agent> {
-        const response = await this.client.put(`/agents/${agentId}`, agentData);
-        return response.data;
-    }
-
-    async deleteAgent(agentId: number): Promise<void> {
-        await this.client.delete(`/agents/${agentId}`);
-    }
-
-    async getAgentStats(agentId: number): Promise<any> {
-        const response = await this.client.get(`/agents/${agentId}/stats`);
         return response.data;
     }
 
@@ -108,17 +87,6 @@ class AgentApiService {
 
     async getAgentSession(sessionId: number): Promise<AgentSession> {
         const response = await this.client.get(`/agents/sessions/${sessionId}`);
-        return response.data;
-    }
-
-    // Templates
-    async listAgentTemplates(): Promise<AgentTemplate[]> {
-        const response = await this.client.get('/agents/templates/list');
-        return response.data.templates;
-    }
-
-    async listAvailableActions(): Promise<any> {
-        const response = await this.client.get('/agents/actions/list');
         return response.data;
     }
 

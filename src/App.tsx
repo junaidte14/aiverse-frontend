@@ -11,9 +11,6 @@ import { DocsPage } from './pages/DocsPage';
 import { WidgetPage } from './pages/WidgetPage'; // Import your WidgetPage
 import { apiService } from './services/api';
 import { useStore } from './store/useStore';
-import { AgentBuilder } from './components/agents/AgentBuilder';
-import { AgentList } from './components/agents/AgentList';
-import { AgentAnalytics } from './components/agents/AgentAnalytics';
 
 function App() {
   const { user, isAuthenticated, setUser, logout, theme } = useStore();
@@ -150,19 +147,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/agents/create" element={<AgentBuilder />} />
-        <Route path="/agents" element={<AgentList />} />
-        <Route path="/agents/:id/edit" element={<AgentBuilder />} />
-        <Route path="/agents/:id/analytics" element={<AgentAnalytics />} />
-        
         {/* The dedicated route for the embeddable iframe widget */}
         <Route path="/widget" element={<WidgetPage />} />
-
         <Route path="/demos" element={<DocsPage />} />
-
         {/* The main dashboard/login application */}
         <Route path="/" element={<MainDashboard />} />
-
         {/* Fallback to home if route not found */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
