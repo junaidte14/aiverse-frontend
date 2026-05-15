@@ -1,4 +1,4 @@
-import { Cog, Menu, Settings, X } from 'lucide-react';
+import { Menu, Settings, X } from 'lucide-react';
 import React, { useState } from 'react';
 
 interface AdminLayoutProps {
@@ -15,7 +15,6 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     const tabs = [
-        { id: 'rag', label: 'RAG', icon: Cog },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
 
