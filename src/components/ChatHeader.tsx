@@ -1,19 +1,14 @@
 // src/components/ChatHeader.tsx
-import { ChevronDown, Home, Layout, LogOut, Shield, User as UserIcon } from 'lucide-react';
+import { ChevronDown, Home, Layout, LogOut, User as UserIcon } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 
 interface ChatHeaderProps {
     isLoading?: boolean;
-    isAdmin?: boolean;
-    onOpenAdmin?: () => void;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({
-    isAdmin = false,
-    onOpenAdmin,
-}) => {
+export const ChatHeader: React.FC<ChatHeaderProps> = () => {
     const { user, logout } = useStore();
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -33,15 +28,6 @@ export const ChatHeader: React.FC<ChatHeaderProps> = ({
                 </div>
 
                 <div className="flex items-center gap-2">
-                    {isAdmin && (
-                        <button
-                            onClick={onOpenAdmin}
-                            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                            title="Admin Panel"
-                        >
-                            <Shield className="w-5 h-5" />
-                        </button>
-                    )}
 
                     <div className="relative">
                         <button

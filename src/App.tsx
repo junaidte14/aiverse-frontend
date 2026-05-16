@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AdminPanel } from './components/admin/AdminPanel';
 import { ChatContainer } from './components/ChatContainer';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Login } from './components/Login';
-import { RAGPanel } from './components/rag/RAGPanel';
 import { Register } from './components/Register';
 import { Sidebar } from './components/Sidebar';
 import { DocsPage } from './pages/DocsPage';
@@ -13,11 +11,9 @@ import { apiService } from './services/api';
 import { useStore } from './store/useStore';
 
 function App() {
-  const { user, isAuthenticated, setUser, logout, theme } = useStore();
+  const { isAuthenticated, setUser, logout, theme } = useStore();
   const [showRegister, setShowRegister] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [showAdmin, setShowAdmin] = useState(false);
-  const [showRAG, setShowRAG] = useState(false);
 
   // --- Auth & Theme Logic ---
   useEffect(() => {
@@ -29,7 +25,6 @@ function App() {
     }
 
     const checkAuth = async () => {
-      // apiService.getToken() checks localStorage for 'access_token'
       if (apiService.getToken()) {
         try {
           const user = await apiService.getCurrentUser();
@@ -73,7 +68,6 @@ function App() {
 
   // --- Main Application Component (Authenticated Dashboard) ---
   const MainDashboard = () => {
-    const isAdmin = (user?.username === 'junaidte14' && import.meta.env.VITE_SHOW_ADMIN == 'true');
 
     if (!isAuthenticated) {
       return (
@@ -95,48 +89,12 @@ function App() {
       );
     }
 
-    if (showRAG) {
-      return (
-        <ErrorBoundary>
-          <div className="relative">
-            <button
-              onClick={() => setShowRAG(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              ← Back to Chat
-            </button>
-            <RAGPanel />
-          </div>
-        </ErrorBoundary>
-      );
-    }
-
-    if (showAdmin && isAdmin) {
-      return (
-        <ErrorBoundary>
-          <div className="relative">
-            <button
-              onClick={() => setShowAdmin(false)}
-              className="absolute top-4 right-4 z-50 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 text-gray-700"
-            >
-              ← Back to Chat
-            </button>
-            <AdminPanel />
-          </div>
-        </ErrorBoundary>
-      );
-    }
-
     return (
       <div className="flex h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
         <Sidebar />
         <main className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-900">
           <ErrorBoundary>
-            <ChatContainer
-              isAdmin={isAdmin}
-              onOpenAdmin={() => setShowAdmin(true)}
-              onOpenRAG={() => setShowRAG(true)}
-            />
+            <ChatContainer/>
           </ErrorBoundary>
         </main>
       </div>

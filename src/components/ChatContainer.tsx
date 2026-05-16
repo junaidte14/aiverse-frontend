@@ -9,16 +9,8 @@ import { ChatHeader } from './ChatHeader';
 import { ChatInput } from './ChatInput';
 import { ChatMessages } from './ChatMessages';
 
-interface ChatContainerProps {
-    isAdmin?: boolean;
-    onOpenAdmin?: () => void;
-    onOpenRAG?: () => void;
-}
 
-export const ChatContainer: React.FC<ChatContainerProps> = ({
-    isAdmin = false,
-    onOpenAdmin,
-}) => {
+export const ChatContainer: React.FC = () => {
     const { messages, isLoading, error, sendMessage } =
         useChat();
     const [showError, setShowError] = useState(true);
@@ -28,11 +20,7 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({
         <div className="h-screen flex items-center justify-center">
             <div className="card w-full h-[100vh] flex flex-col overflow-hidden">
                 {/* Header */}
-                <ChatHeader
-                    isLoading={isLoading}
-                    isAdmin={isAdmin}
-                    onOpenAdmin={onOpenAdmin}
-                />
+                <ChatHeader isLoading={isLoading}/>
 
                 {/* Error Display */}
                 {error && showError && (
